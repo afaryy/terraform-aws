@@ -1,0 +1,28 @@
+Based on To-do-list-02 (install apache on EC2 instance)
+
+1. Basic part: copy code To-do-list-02, install apache and ensure yor are able to access the web page
+2. Install CW agent on the box and configuration CW agent mannaully on EC2 instnaces to
+  - Update instance profile so EC2 is able to put logs to CW log group
+  - Install CW agent on the server 
+  - Ship below two files to CW agent with instance-
+    access log of httpd (apache web server) -> 
+         log group apache-acces-log  (log group created in To-do-list-05)
+         log stram name: {instance_id}
+    access error of httpd(apache web server) -> 
+         log group apache-acces-log  (log group created in To-do-list-05)
+         log stram name: {instance_id}
+    Access web page, and check whether access logs have been shipped to CW log groups
+   
+3. Update userdata script to install and configure CW agent automatically 
+4. Challenge
+   - Upload CW agnet confgiuration files in S3 bucket
+   - Update instnce profile so instance is able to download files from S3 bucket
+   - Update user data script to download CW agent configration files from S3 bucket 
+  
+
+Reference:
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent-commandline-fleet.html
+Create the CloudWatch Agent Configuration File with the Wizard
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/create-cloudwatch-agent-configuration-file-wizard.html
+CloudWatch Agent Configuration File: Logs Section
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html

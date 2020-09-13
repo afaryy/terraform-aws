@@ -1,0 +1,63 @@
+Based on 03
+Reference architecture:
+- Diagram Routet53*.png Route53*.jpg
+- https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-configuring.html
+- https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-types.html
+- https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-simple-configs.html
+
+Tasks:
+- Create your own terraform moudule which creates  ELB/ASG/EC2 as to-do-list-03 except Router 53 records with below update:
+  * HTTP index.html with stackname, such as blue/green which passed as a parameter
+  * Encrypt root disk using ur own KMS key
+  * Variables:
+     ACM certificate ARN (ACM certificate applis to ELB)
+     DNS name for the ACM certificat 
+     KMS Key ARM
+     subnets for ASG instances? 
+     others (free to add by yourself)
+     stack_name (such as DD&MM lol)
+- Terraform template
+  * Create 2 ELB/ASG/EC2 by calling above module
+
+- Route 53 active-active failover test
+  https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-types.html#dns-failover-types-active-active
+  And access https://xxx.dryovnne.net, refresh the pages
+  Expected output:  Round-robin between stack_green & stack_bule 
+
+- Route 53 active-passive failover test
+  Update R53 records to active-passive 
+  Active elb: stack_green
+  Passive elb: stack_blue
+
+  And access https://xxx.dryovnne.net, refresh the pages
+  Expected output:  stack_green
+
+- Route 53 weighted traffic: 
+  Update R53 records to weighed traffic:
+  stack_green : 80%
+  stack_blue : 20%
+
+  And access https://xxx.dryovnne.net, refresh the pages
+
+- Challenge here: (Route 53 and ELB healthy check)
+  Stop http server on stack_green, wait 5 mintues(?), access url again.
+  Expected output: ?
+
+  Start http server on stack_green, wait 5 minutes, access url again.
+  Expected output: ?
+
+  Reduce stack_green ASG min/disired/max capacity to 0, write 5 minutes, access url again:
+  Expected output: ?
+
+
+  https://gameanalytics.com/blog/terraform-infrastructure-850-million-monthly-players.html
+
+  https://www.hashicorp.com/blog/terraform-feature-toggles-blue-green-deployments-canary-test/
+
+  https://medium.com/dazn-tech/how-to-implement-the-perfect-failover-strategy-using-amazon-route53-1cc4b19fa9c7 (Latency-based routing)
+
+  https://stackoverflow.com/questions/52923742/route-53-failover-policy-with-terraform
+
+  https://registry.terraform.io/modules/mineiros-io/route53/aws/0.2.3/examples/failover-routing
+
+  https://aws.amazon.com/premiumsupport/knowledge-center/ec2-client-internal-error/
