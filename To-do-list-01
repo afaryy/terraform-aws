@@ -1,0 +1,13 @@
+Update the code to
+- AWS Region: ap-southeast-2 (what is there is no region defined?)
+- OS: Amazon Linux 
+- VPC: your own VPC
+- subnet: public sunet 
+- Public ip: yes
+- Security group: allow inbound ssh from ur own ip
+- key pair: create ur own key pair, and use it for the instance
+- Tags:
+   Name: demo-1
+   Owner: YaoYY
+
+
