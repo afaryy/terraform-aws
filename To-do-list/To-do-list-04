@@ -48,16 +48,3 @@ Tasks:
 
   Reduce stack_green ASG min/disired/max capacity to 0, write 5 minutes, access url again:
   Expected output: ?
-
-
-  https://gameanalytics.com/blog/terraform-infrastructure-850-million-monthly-players.html
-
-  https://www.hashicorp.com/blog/terraform-feature-toggles-blue-green-deployments-canary-test/
-
-  https://medium.com/dazn-tech/how-to-implement-the-perfect-failover-strategy-using-amazon-route53-1cc4b19fa9c7 (Latency-based routing)
-
-  https://stackoverflow.com/questions/52923742/route-53-failover-policy-with-terraform
-
-  https://registry.terraform.io/modules/mineiros-io/route53/aws/0.2.3/examples/failover-routing
-
-  https://aws.amazon.com/premiumsupport/knowledge-center/ec2-client-internal-error/

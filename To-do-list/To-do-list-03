@@ -1,4 +1,5 @@
 Based on 02
+
 Pre-requsite:
 - Create an ACM cert for demo.dryovnne.net from AWS Console
 - Create ELB/ASG as https://aws.amazon.com/blogs/aws/elb-connection-draining-remove-instances-from-service-with-care/
@@ -8,60 +9,23 @@ Pre-requsite:
   disired size: 2
   max size: 2
   userata:
-#!/bin/bash
-yum update -y
-amazon-linux-extras install -y lamp-mariadb10.2-php7.2 php7.2
-yum install -y httpd mariadb-server
-systemctl start httpd
-systemctl enable httpd
-usermod -a -G apache ec2-user
-chown -R ec2-user:apache /var/www
-chmod 2775 /var/www
-find /var/www -type d -exec chmod 2775 {} \;
-find /var/www -type f -exec chmod 0664 {} \;
+    #!/bin/bash
+    yum update -y
+    amazon-linux-extras install -y lamp-mariadb10.2-php7.2 php7.2
+    yum install -y httpd mariadb-server
+    systemctl start httpd
+    systemctl enable httpd
+    usermod -a -G apache ec2-user
+    chown -R ec2-user:apache /var/www
+    chmod 2775 /var/www
+    find /var/www -type d -exec chmod 2775 {} \;
+    find /var/www -type f -exec chmod 0664 {} \;
 
+    or else
 
 # your task to create /var/www/index.html which showing the available zone of the instance by checking userdata url
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html#instance-metadata-ex-1
 # curl http://169.254.169.254/latest/meta-data/placement/availability-zone
-
------------------------------------------------------------------------
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/placement/availability-zone
-
-https://medium.com/@KerrySheldon/ec2-exercise-1-4-host-a-static-webpage-behind-a-load-balancer-26762f7190a2
-https://www.liquidweb.com/kb/chkconfig-command-examples-for-red-hat-and-centos/
-https://stackoverflow.com/questions/5312766/how-to-auto-start-web-services-when-starting-an-amazon-ec2-instance
-
-# Shell script passed test as follows:
-#!/bin/bash
-yum update -y
-yum install httpd -y
-service httpd start
-chkconfig httpd on
-cd /var/www/html
-echo "<html><body>Availability Zone of this instance: " > index.html
-curl http://169.254.169.254/latest/meta-data/placement/availability-zone >> index.html
-echo "</body></html>" >> index.html
-
-aws ec2 describe-instance-attribute --instance-id i-029f7f35cb4c3bded --attribute userData \
---output text --query "UserData.Value" | base64 --decode
-
-systemctl enable httpd
-
-ssh -i ericho.pem ec2-user@i-0c25bcea258ed0faa
-
-# Shell script not passed test as follows
-#!/bin/bash
-# install httpd (Linux 2 version)
-yum update -y
-yum install -y httpd.x86_64
-systemctl start httpd.service
-systemctl enable httpd.service
-cd /var/www/html
-echo "<html><body>Availability Zone of this instance: " > index.html
-curl http://169.254.169.254/latest/meta-data/placement/availability-zone >> index.html
-echo "</body></html>" >> index.html
----------------------------------------------------------------------------------------------
 
 - Register instance with ELB
 - ELB listener: tcp/443 with domain name demo.dryonne.net backend: tcp/80 to the vms created by ASG
@@ -69,130 +33,4 @@ echo "</body></html>" >> index.html
 - Target: 
   access https://demo.dryvonne.net
   which shows differnt ap-southeast-2a/b/c when u refresh the url
-
------------------------------------------------------------
-- Lesson learned (for network):
-  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet
-  public subnet resource aws_subnet:  map_public_ip_on_launch = "true"
-   (Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. 
-   Default is false.
-  Console->Subnets->Modify auto-assign IP settings-> Auto-assign IPv4: Enable auto-assign public IPv4 address 
-
-- where should we put the instance? public subnet or private subnet? and why?
-- what if we put the instance in private subnet? private subnet needs a NAT instance or NAT gateway
-- for to-do-list-2,  create a t2-micro nat instance manually and update  private subnet route table
-  https://docs.aws.amazon.com/vpc/latest/userguide/VPC_NAT_Instance.html
-
-  aws ec2 describe-images --filter Name="owner-alias",Values="amazon" \
-          --filter Name="name",Values="amzn-ami-vpc-nat-2018.03*" --query "Images[*].[ImageId,Name,CreationDate]"
-
-   TAG: KEY: scheduler:ec2-startstop VALUE: 0700;2300;;mon,tue,wed,thu,fri,sun
-
-   aws ec2 modify-instance-attribute --instance-id i-077b7c0445fe40bb4 --source-dest-check "{\"Value\": true}"
-
-   https://stackoverflow.com/questions/17846529/could-not-open-a-connection-to-your-authentication-agent
-
-   https://askubuntu.com/questions/762541/ubuntu-16-04-ssh-sign-and-send-pubkey-signing-failed-agent-refused-operationls
-
-   ssh -A ec2-user@3.25.79.218
-
-   ssh -A ec2-user@54.0.0.123
-
-   ssh-copy-id -i ~/.ssh/your-key-name.pub root@12.34.56.78
-
-
-   root@ip-10-128-10-55 etc]# grep -irn configure-pat.sh *
-init/nat.conf:7:exec /usr/sbin/configure-pat.sh
-
-   [ec2-user@ip-10-128-10-55 ~]$ w
- 11:24:04 up  5:40,  3 users,  load average: 0.00, 0.00, 0.00
-USER     TTY      FROM              LOGIN@   IDLE   JCPU   PCPU WHAT
-ec2-user pts/0    110.147.203.93   09:05    2:17m  0.00s  0.00s -bash
-ec2-user pts/1    ec2-52-65-228-23 11:22    1.00s  0.00s  0.00s w
-ec2-user pts/3    180-150-39-3.b49 11:23   55.00s  0.00s  0.00s -bash
-
-modify Jumpbox to NAT Instance:
-
-IPv4 forwarding is enabled and ICMP redirects are disabled in /etc/sysctl.d/10-nat-settings.conf
-A script located at /usr/sbin/configure-pat.sh runs at startup and configures iptables IP masquerading.
-For information about Amazon Linux support, see Amazon Linux AMI FAQs
-
-copy these 2 files from NAT instance mannaully
-[root@ip-10-128-10-55 etc]# grep -irn configure-pat.sh *
-init/nat.conf:7:exec /usr/sbin/configure-pat.sh
-
-
-https://www.thegeekdiary.com/centos-rhel-7-how-to-make-custom-script-to-run-automatically-during-boot/
-
-
-[10:52 PM, 8/26/2020] Eric: centos@ip-10-128-11-187 ~ $ ls -l /etc/systemd/system/nat.service
--rw-r--r--. 1 root root 160 Aug 26 22:38 /etc/systemd/system/nat.service
-[10:52 PM, 8/26/2020] Eric: centos@ip-10-128-11-187 ~ $ cat /etc/rc.d/init.d/nat
-#!/bin/bash
-
-# Config NAT
-iptables --flush
-iptables --table nat --flush
-iptables --delete-chain
-iptables --table nat --delete-chain
-iptables --table nat --append POSTROUTING --out-interface eth0 -j MASQUERADE
-iptables --append FORWARD --in-interface eth0 -j ACCEPT
-echo 1 > /proc/sys/net/ipv4/ip_forward
-[10:53 PM, 8/26/2020] Eric: centos@ip-10-128-11-187 ~ $ cat /etc/sysctl.d/10-nat-settings.conf
-#
-# NAT AMI settings
-#
-
-net.ipv4.ip_forward = 1
-net.ipv4.conf.eth0.send_redirects = 0
-[10:53 PM, 8/26/2020] Yvonne Yao: miracle
-[10:53 PM, 8/26/2020] Eric: [root@ip-10-128-11-187 ~]# iptables -t nat -L
-Chain PREROUTING (policy ACCEPT)
-target     prot opt source               destination
-
-Chain INPUT (policy ACCEPT)
-target     prot opt source               destination
-
-Chain OUTPUT (policy ACCEPT)
-target     prot opt source               destination
-
-Chain POSTROUTING (policy ACCEPT)
-target     prot opt source               destination
-MASQUERADE  all  --  anywhere             anywhere
-[10:54 PM, 8/26/2020] Eric: And here are the rules set by docker
-[10:54 PM, 8/26/2020] Eric: [root@ip-10-128-11-187 log]# iptables -t nat -L
-Chain PREROUTING (policy ACCEPT)
-target     prot opt source               destination
-DOCKER     all  --  anywhere             anywhere             ADDRTYPE match dst-type LOCAL
-
-Chain INPUT (policy ACCEPT)
-target     prot opt source               destination
-
-Chain OUTPUT (policy ACCEPT)
-target     prot opt source               destination
-DOCKER     all  --  anywhere            !loopback/8           ADDRTYPE match dst-type LOCAL
-
-Chain POSTROUTING (policy ACCEPT)
-target     prot opt source               destination
-MASQUERADE  all  --  172.17.0.0/16        anywhere
-MASQUERADE  all  --  172.18.0.0/16        anywhere
-
-Chain DOCKER (2 references)
-target     prot opt source               destination
-RETURN     all  --  anywhere             anywhere
-RETURN     all  --  anywhere             anywhere
-[10:54 PM, 8/26/2020] Eric: which u can see only  NAT from 172.17.0.0/16 and 172.18.0.0/16
-
-[11:01 PM, 8/26/2020] Eric: to run docker containers on the box,  the host vm needs to provide NAT services to docker containers which have ip address 172.17.x.x or 172.18.x.x
-[11:01 PM, 8/26/2020] Eric: [hbwork@centos8 ~]$ docker run -it --name websetup1 centos:6 /bin/bash
-[root@82843a700b87 /]# ifconfig
-eth0      Link encap:Ethernet  HWaddr 02:42:AC:11:00:05
-          inet addr:172.17.0.5  Bcast:172.17.255.255  Mask:255.255.0.0
-[11:02 PM, 8/26/2020] Eric: we don't need testNAt instance anymore
-
-
-[hbwork@centos8 ~]$ free
-              total        used        free      shared  buff/cache   available
-Mem:        7997904      507480     3598836       40120     3891588     7146932
-Swap:       2121724           0     2121724
 
