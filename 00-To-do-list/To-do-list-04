@@ -10,12 +10,12 @@ Tasks:
   * HTTP index.html with stackname, such as blue/green which passed as a parameter
   * Encrypt root disk using ur own KMS key
   * Variables:
-     ACM certificate ARN (ACM certificate applis to ELB)
-     DNS name for the ACM certificat 
+     ACM certificate ARN (ACM certificate applies to ELB)
+     DNS name for the ACM certificate 
      KMS Key ARM
-     subnets for ASG instances? 
+     subnets for ASG instances
      others (free to add by yourself)
-     stack_name (such as DD&MM lol)
+     stack_name
 - Terraform template
   * Create 2 ELB/ASG/EC2 by calling above module
 
