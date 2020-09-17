@@ -1,12 +1,12 @@
 # C04-IAC02
 
 ## Terraform code 
-- [_backend.tf](.\terraform-code\_backend.tf)
-- [_provider.tf](.\terraform-code\_provider.tf)
-- [vpc.tf](.\terraform-code\vpc.tf)
-- [outputs.tf](.\terraform-code\outputs.tf)
-- [variables.tf].\terraform-code\(variables.tf)
-- [main.tfvars](.\terraform-code\main.tfvars)
+- [_backend.tf](./terraform-code/_backend.tf)
+- [_provider.tf](./terraform-code/_provider.tf)
+- [vpc.tf](./terraform-code/vpc.tf)
+- [outputs.tf](./terraform-code/outputs.tf)
+- [variables.tf](./terraform-code/variables.tf)
+- [main.tfvars](./terraform-code/main.tfvars)
 
 ## Command Execution Output
 - [output.txt](output.txt)
