@@ -39,3 +39,5 @@ echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
 Challenge:
 - Create an Route 53 record demo.dryovnne.net (A record) in ur domain and point to the VM public ip
 - Access the web server using DNS name: http://demo.dryovnne.net/
+
+
