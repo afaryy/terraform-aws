@@ -1,7 +1,7 @@
 # Overview
 
 * [Terraform](https://www.terraform.io/) is an Infrastructure as Code tool to provision and manage any cloud, infrastructure, or service.
-* These files are about some practices to provision, manage and automate multiple [AWS services](https://aws.amazon.com/) through [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) scripts.
+* These files are about my practices to provision, manage and automate multiple [AWS services](https://aws.amazon.com/) through [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) scripts.
 
 
 
@@ -41,4 +41,4 @@ Code Directory | Tasks | AWS services  | Task Description Link
 # Thanks
 * Thank my mentor Senior Cloud Engineer [Eric Ho](hbwork@gmail.com) very much. Thanks for contributing for the [To-do-list](./00-To-do-list) summarised and abstracted from real projects and directing me to deliver the tasks.
 
-* Thank [DevOps Academy](https://github.com/devopsacademyau) very much. Four tasks of [DA-iac-01to04](.\DA-iac) come from some labs of Infrastructure As Code on DevOps Academy.
+* Thank [DevOps Academy](https://github.com/devopsacademyau) very much. Four tasks of [DA-iac-01to04](.\DA-iac) come from my answers for some labs of Infrastructure As Code on DevOps Academy.
