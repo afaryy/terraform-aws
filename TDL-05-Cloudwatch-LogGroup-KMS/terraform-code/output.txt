@@ -1,0 +1,15 @@
+Outputs:
+
+kms_key_arn = arn:aws:kms:ap-southeast-2:421117346104:key/8160b75f-7dcd-4398-8454-7847fb4fc9ff
+log_groups = {
+  "TDL-05-apache-access-log" = {
+    "kms_key_id" = "arn:aws:kms:ap-southeast-2:421117346104:key/8160b75f-7dcd-4398-8454-7847fb4fc9ff"
+    "name" = "TDL-05-apache-access-log"
+    "retention_in_days" = 14
+  }
+  "TDL-05-apache-error-log" = {
+    "kms_key_id" = "arn:aws:kms:ap-southeast-2:421117346104:key/8160b75f-7dcd-4398-8454-7847fb4fc9ff"
+    "name" = "TDL-05-apache-error-log"
+    "retention_in_days" = 14
+  }
+}

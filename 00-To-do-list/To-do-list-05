@@ -1,10 +1,10 @@
 Terraform stack cloudwatch-log-group-persistent to create below 2 CloudWatch groups with KMS keys
 - CW group name: apache-access-log
-  retention period: 15
+  retention period: 14
   encrypted with your KMS key
 
 - CW group name: apache-error-log
-  retention period: 15
+  retention period: 14
   encrypted with your KMS key
 
 
