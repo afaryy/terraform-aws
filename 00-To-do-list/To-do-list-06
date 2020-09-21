@@ -1,15 +1,15 @@
 Based on To-do-list-02 (install apache on EC2 instance)
 
-1. Basic part: copy code To-do-list-02, install apache and ensure yor are able to access the web page
+1. Basic part: based on code To-do-list-02, install apache and ensure yor are able to access the web page
 2. Install CW agent on the box and configuration CW agent mannaully on EC2 instnaces to
   - Update instance profile so EC2 is able to put logs to CW log group
   - Install CW agent on the server 
   - Ship below two files to CW agent with instance-
     access log of httpd (apache web server) -> 
-         log group apache-acces-log  (log group created in To-do-list-05)
+         log group apache-access-log  (log group created in To-do-list-05)
          log stram name: {instance_id}
     access error of httpd(apache web server) -> 
-         log group apache-acces-log  (log group created in To-do-list-05)
+         log group apache-access-log  (log group created in To-do-list-05)
          log stram name: {instance_id}
     Access web page, and check whether access logs have been shipped to CW log groups
    
