@@ -22,7 +22,7 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role-instanceprofile" {
-  name = "${var.project_name}-ec2-s3-cwlogs-role-instanceprofile"
+  name = "${var.project_name}-ec2-cwlogs-role-instanceprofile"
   role = aws_iam_role.ec2-role.name
 }
 
@@ -51,7 +51,8 @@ resource "aws_iam_role_policy" "role-policy" {
                 "s3:GetObject"
             ],
             "Resource": [
-                "${data.aws_s3_bucket.bucket.arn}/*"
+              "${data.aws_s3_bucket.bucket.arn}/",
+              "${data.aws_s3_bucket.bucket.arn}/*"
             ]
         }
     ]
