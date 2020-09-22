@@ -10,7 +10,7 @@ terraform {
   backend "s3" {
     # enable remote state storage with S3
     bucket         = "terraform-state-backend-bucket"
-    key            = "terraform/terraform.tfstate"
+    key            = "${prefix}/terraform.tfstate"
     region         = "ap-southeast-2"
 
     # use DynamoDB for locking with Terraform

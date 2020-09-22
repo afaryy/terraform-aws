@@ -1,0 +1,8 @@
+project_stack_bucket = {
+  "bucket_arn" = "arn:aws:s3:::project-stack-bucket"
+  "bucket_name" = "project-stack-bucket"
+}
+terraform_state_bucket = {
+  "bucket_arn" = "arn:aws:s3:::project-terraform-state-backend-bucket"
+  "bucket_name" = "project-terraform-state-backend-bucket"
+}

@@ -20,7 +20,7 @@ rpm -U ./amazon-cloudwatch-agent.rpm
 #touch /usr/share/collectd/types.db
 
 # Download the config file from the bucket
-aws s3 cp s3://${bucket_name}/${prefix}config.json /tmp/config.json
+aws s3 cp s3://project-stack-bucket/tdl6-bucket/config.json /tmp/config.json
 cp /tmp/config.json  /opt/aws/amazon-cloudwatch-agent/bin/config.json
 
 # start the cloudwatch agent
