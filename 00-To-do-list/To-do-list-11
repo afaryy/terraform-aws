@@ -1,0 +1,19 @@
+Python script terminate_aged_instances_with_snapshots.py
+
+How to use:
+./terminate_aged_instances.py [current_time]
+current_time: YYYYMMDDHHmm, default value: current time
+
+Basic workflow:
+- check current_time is provided from command line, and format is correct
+- if not provided, set current time to current_time
+- Check EC2 instances in your accouunt which has tag AgedTime
+- For each instance with AgedTime Tag
+  if AgedTime < current_time:   #instance should be terminated)
+      if instance is running 
+           stop the instance
+           wait instance is stopped
+
+      for each ebs volume attached to the instance:
+           take snapshot of the instance with name tag instance_name_device_name (such as amzn_/dev/xvda)
+      terminate the instance 

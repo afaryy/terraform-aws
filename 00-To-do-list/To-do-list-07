@@ -1,0 +1,28 @@
+Based on To-do-list-06 (CW agent)
+
+1. Basic part: based on code To-do-list-06, install CW agent on Ec2 instance and ships apache logs to CW Logs group
+2. Generate 404 log message to CW log group apache-access-log
+- Spin up Apache server 
+- Access any non-existance url using curl (or from your laptop) 
+- SSH to apache server, run grep to ensure there are 404 records in access-log
+  Example logs:
+  127.0.0.1 - frank [10/Oct/2000:13:25:15 -0700] \"GET /index.html HTTP/1.0\" 404 1534
+- Wait ~ 5 minutes until data is populated by CW agent to CW log groups, check there are 404 message in CW log groups
+3. From AWS console, create customized CW metric urlNotFound
+  https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html
+  Using Metric Filters to Extract Values from Space-Delimited Log Events 
+
+  Log Group: apache-access-log
+  
+  Access any non-existance url using curl (or from your laptop), check whether CW metric urlNotFound is greater than 0
+    
+4. Automate step 3 using Terraform ( try to import resource created in step 3?)
+  
+   - update code To-do-list-06 
+   - Run terraform apply to create CW filter and metrics
+
+  
+
+Reference:
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html 
+Creating Metrics From Log Events Using Filters
