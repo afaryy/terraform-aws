@@ -1,0 +1,3 @@
+- Terraform template to deploy lambda function terminate_aged_instances_with_snapshots
+- Basci IAM role for lambda function to function (describe instance, .., create tags, snapshot, stop instance, termiante instance ...)
+- CloudWatch event rule to run the lambda function every 5 minutes

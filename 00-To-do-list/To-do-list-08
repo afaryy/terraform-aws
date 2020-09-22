@@ -1,0 +1,22 @@
+Based on To-do-list-07 (CW filter and metrics) 
+
+1. Basic part: based on code To-do-list-07
+2. From AWS console, 
+  - Create one SNS topic with your preferred name
+  - Subscribe your email to SNS topic created above
+  - Creat one CW alarm based on CW metrics urlNotFound 
+    alarm is triggered if urlNotFound > 0 in one minute
+    once alarm is triggered, send notificaiton to ur email 
+    
+3. Automate step 3 using Terraform (different SNS topic name?)
+   - update code To-do-list-07 to create CW alarm and SNS
+   - Alarm action -> SNS
+   - Manuuly subscribe your email to SNS
+   
+Reference:
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/MonitoringLogData.html 
+Creating Metrics From Log Events Using Filters
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html
+Using Amazon CloudWatch Alarms
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/US_SetupSNS.html
+Setting Up Amazon SNS Notifications 

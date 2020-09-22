@@ -1,0 +1,41 @@
+Shell script deploy_instance_with_datadisk.sh
+
+How to use:
+./deploy_instance.sh ostype agedtime data_disk_size [instance_type]
+   valid ostype: amzn, amzn2, centos6, centos7, ubuntu
+   agedtime: 1-7
+   data_disk_size: 5-100 (GB)
+   instance_type: default t2_micro, valid instance_type: t2_micro, t2_small, t3_micro
+
+Basic workflow:
+- function usage(), show how to use the script, such as  
+./deploy_instance.sh ostype agedtime [instance_type]
+   valid ostype: amzn, amzn2, centos6, centos7, ubuntu
+   agedtime: 1-7
+   data_disk_size: 5-100 (GB)
+   instance_type: default t2_micro, valid instance_type: t2_micro, t2_small, t3_micro
+- check input
+  if less than 2 parameters from command line, print usage() and exit
+
+- check whehter ostype is a valid option, if ostype is an invalid ostype, print usage() and exit 
+- check whether 1 <= agedtime <=7, otherwise iprint usage() and exit
+- check whether instance_type is valid, otherwise iprint usage() and exit
+- Find the latest image id for ostype and print out the image_id, image_name
+- Create EC2 instance for osype with instance_type with below settings:
+  Subnet: private subnet in ur vpc
+  Security group: existing sg in ur vpc to allow inbound ssh
+  Data disk: mount point /data
+  Tags:
+     Name: ostype_test
+     AgedTime: yyyymmddhhmm (current time + agedtime days in Australia/Melbourne Time)
+     scheduler:ec2-startstop ;1900;;all
+  Userdata:
+      update /etc/motd with below mesage:
+      OSType: $ostype 
+      Please be notified that your instance will be terminated by  yyyymmddhhmm
+- Check instance status and wait instance is running status
+- print out instance id and private ip
+    
+Reference:
+- https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html
+
