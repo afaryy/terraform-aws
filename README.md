@@ -25,6 +25,7 @@ Code Directory | Tasks | AWS services  | Task Description Link
 [TDL-06-EC2-Cloudwatch-S3](./TDL-06-EC2-Cloudwatch-S3) | Based on TDL-05, upload CW agnet confgiuration files in S3 bucket, <br>update instance profile so EC2 is able to put logs to CW log group and download confgiuration file from S3 bucket, <br>Update userdata script to install and configure CW agent automatically. <br>Access web page, and check whether access logs have been shipped to CW log groups. | Cloudwatch, EC2, S3 | [To-do-list-06](./00-To-do-list/To-do-list-06) 
 [TDL-07-EC2-Cloudwatch-loggroup-metricfilter](./DL-07-EC2-Cloudwatch-loggroup-metricfilter) | Based on code TDL-06,  generate 404 log message to CW log group apache-access-log, create metric filter (HTTP 404 errors) and metric.| Cloudwatch, EC2, S3 | [To-do-list-07](./00-To-do-list/To-do-list-07) 
 
+
 # Authors
 
 ## Yingying(Yvonne) Yao

@@ -9,3 +9,4 @@ metric_filter = {
   "metric_namespace" = "myMetricNameSpace"
   "metric_value" = "1"
 }
+
