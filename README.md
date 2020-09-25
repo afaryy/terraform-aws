@@ -23,21 +23,12 @@ Code Directory | Tasks | AWS services  | Task Description Link
 [DA-iac04-ALB-ASG-SG-CW-Route53](./DA-iac04-ALB-ASG-SG-CW-Route53/) |  ALB that will distribute the load for an ASG group of EC2 instances.<br>ASG have 2 scaling policies(one to increase and another to decrease the number of hosts).<br>Security Groups so the ALB can be accessed from the internet.<br>Create Route53 record associated with ALB. | Application Load Balancer, Autoscaling Group, Cloudwatch Alarm, Security Group, Route53 Record |[c04-iac04](https://github.com/devopsacademyau/academy/blob/c41e824fb2a2c55e3a30b2371a87e3a7551b6741/classes/04class/exercises/c04-iac04/README.md)
 [TDL-05-Cloudwatch-LogGroup-KMS](./TDL-05-Cloudwatch-LogGroup-KMS) | Create 2 CloudWatch log groups with KMS keys. | Cloudwatch, KMS | [To-do-list-05](./00-To-do-list/To-do-list-05) 
 [TDL-06-EC2-Cloudwatch-S3](./TDL-06-EC2-Cloudwatch-S3) | Based on TDL-05, upload CW agnet confgiuration files in S3 bucket, <br>update instance profile so EC2 is able to put logs to CW log group and download confgiuration file from S3 bucket, <br>Update userdata script to install and configure CW agent automatically. <br>Access web page, and check whether access logs have been shipped to CW log groups. | Cloudwatch, EC2, S3 | [To-do-list-06](./00-To-do-list/To-do-list-06) 
-
-
-
-
-
-
-
-
-
-
+[TDL-07-EC2-Cloudwatch-loggroup-metricfilter](./DL-07-EC2-Cloudwatch-loggroup-metricfilter) | Based on code TDL-06,  generate 404 log message to CW log group apache-access-log, create metric filter (HTTP 404 errors) and metric.| Cloudwatch, EC2, S3 | [To-do-list-07](./00-To-do-list/To-do-list-07) 
 
 
 # Authors
 
-## Yvonne(Yingying) Yao
+## Yingying(Yvonne) Yao
 
 - Linkedin: [https://www.linkedin.com/in/yvonneyao/](https://www.linkedin.com/in/yvonneyao/)
 - Github: [https://github.com/afaryy](https://github.com/afaryy)

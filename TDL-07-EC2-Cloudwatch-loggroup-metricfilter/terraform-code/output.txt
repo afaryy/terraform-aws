@@ -1,0 +1,12 @@
+Outputs:
+
+instance = 13.211.9.29
+metric_filter = {
+  "default_value" = "0"
+  "filter_name" = "tdl7-HTTP404Errors"
+  "filter_parttern" = "[host, logName, user, timestamp, request, statusCode=404, size]"
+  "metric_name" = "tdl7-urlNotFound"
+  "metric_namespace" = "myMetricNameSpace"
+  "metric_value" = "1"
+}
+
