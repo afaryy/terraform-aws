@@ -1,0 +1,22 @@
+Outputs:
+
+alarm = {
+  "alarm_actions" = [
+    "arn:aws:sns:ap-southeast-2:421117346104:alarms_topic",
+  ]
+  "alarm_arn" = "arn:aws:cloudwatch:ap-southeast-2:421117346104:alarm:404Alarm"
+  "comparison_operator" = "GreaterThanThreshold"
+  "datapoints_to_alarm" = 1
+  "evaluation_periods" = 1
+  "period" = 60
+  "threshold" = 0
+}
+instance = 54.252.188.49
+metric_filter = {
+  "default_value" = "0"
+  "filter_name" = "tdl8-HTTP404Errors"
+  "filter_parttern" = "[host, logName, user, timestamp, request, statusCode=404, size]"
+  "metric_name" = "urlNotFound"
+  "metric_namespace" = "myMetricNameSpace"
+  "metric_value" = "1"
+}
