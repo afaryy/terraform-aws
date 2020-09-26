@@ -9,7 +9,7 @@ uploadconfigfile:
 
 .PHONY: plan # run terraform plan
 plan:
-	terraform init;terraform refresh;terraform plan -out tfplan
+	terraform fmt;terraform init;terraform refresh;terraform plan -out tfplan
 
 PHONY: apply # run terraform apply
 apply:

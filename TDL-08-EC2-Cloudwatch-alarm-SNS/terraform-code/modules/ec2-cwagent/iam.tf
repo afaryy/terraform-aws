@@ -36,13 +36,17 @@ resource "aws_iam_role_policy" "role-policy" {
         {
             "Effect": "Allow",
             "Action": [
+                "cloudwatch:PutMetricData",
+                "ec2:DescribeVolumes",
+                "ec2:DescribeTags",
                 "logs:CreateLogGroup",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
-                "logs:DescribeLogStreams"
+                "logs:DescribeLogStreams",
+                "logs:DescribeLogGroups"
             ],
             "Resource": [
-                "arn:aws:logs:*:*:*"
+                "*"
             ]
         },
         {
@@ -59,4 +63,3 @@ resource "aws_iam_role_policy" "role-policy" {
 }
 EOF
 }
-
