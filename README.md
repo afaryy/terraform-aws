@@ -35,6 +35,5 @@ Code Directory | Tasks | AWS services  | Task Description Link
 - Member: [DevOps Academy](https://github.com/devopsacademyau), [DevopsGirls](devopsgirls.slack.com)
 
 # Thanks
-* Thank my mentor Senior Cloud Engineer [Eric Ho](hbwork@gmail.com) very much. Thanks for contributing for the [To-do-list](./00-To-do-list) summarised and abstracted from real projects and directing me to deliver the tasks.
 
 * Thank [DevOps Academy](https://github.com/devopsacademyau) very much. Four tasks of [DA-iac-01to04](.\DA-iac) come from my practices for some hands-on labs of Infrastructure As Code on DevOps Academy.
