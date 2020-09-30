@@ -3,13 +3,41 @@
 # Deploy AWS instance.
 # Author: Yvonne Yao
 
+# set variables
 export AWS_DEFAULT_REGION='ap-southeast-2'
 DEFAULT_TIME_ZONE='Australia/Melbourne'
 declare -a LIST_OSTYPE
 LIST_OSTYPE=('amzn' 'amzn2' 'centos6' 'centos7' 'ubuntu')
 declare -a LIST_INSTANCE_TYPE
 LIST_INSTANCE_TYPE=('t2.micro' 't2.small' 't3.micro')
-instance_type='t2.micro' #default value
+instance_type=${3:-t2.micro}  # default value
+
+KEY_NAME='da-key'
+VPC_NAME='da-c02-vpc'
+VPC_ID=$(aws ec2 describe-vpcs \
+    --filter "Name=tag:Name,Values=$VPC_NAME" \
+    --query Vpcs[].VpcId --output text)
+echo $VPC_ID
+PRIVATE_SUBNET_A_NAME='da-c02-private-a'
+PRIVATE_SUBNET_A_ID=$(aws ec2 describe-subnets  \
+    --filter "Name=tag:Name,Values=$PRIVATE_SUBNET_A_NAME" \
+    --query 'Subnets[].SubnetId' --output text)
+echo "${PRIVATE_SUBNET_A_ID}"
+
+SG_PRIVATE_NAME='da-c02-private-sg'
+SG_PRIVATE_ID=$(aws ec2 describe-security-groups \
+    --filters Name=vpc-id,Values="${VPC_ID}" Name=group-name,Values="${SG_PRIVATE_NAME}" \
+    --query  'SecurityGroups[*].[GroupId]'  --output text)
+echo "${SG_PRIVATE_ID}"
+
+EC2_NAME="${ostype}_test"
+RULE=';1900;;all'
+
+# start_time=$(date -d "$(TZ='Australia/Melbourne' date)" +%Y%m%d%H%M%S)
+# echo ${start_time}
+## AgedTime: yyyymmddhhmm (current time + agedtime days in Australia/Melbourne Time)
+stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days -3600 seconds" +%Y%m%d%H%M%S)
+echo ${stop_time}
 
 #######################################
 # Print a message in a given color.
@@ -52,12 +80,12 @@ function list_include_item {
 function usage(){
   case "$1" in
     all)
-      print_color "red" "To deploy your instance, please run deploy_instance.sh as follows:"
-      print_color "red" "./deploy_instance.sh ostype agedtime [instance_type]"
-      print_color "red" "The value range of the arguments: "
-      print_color "red" "1. valid ostype: amzn, amzn2, centos6, centos7, ubuntu"
-      print_color "red" "2. agedtime: 1-7 "
-      print_color "red" "3. instance_type: default t2_micro, valid instance_type: t2.micro, t2.small, t3.micro"
+      print_color "green" "To deploy your instance, please run deploy_instance.sh as follows:"
+      print_color "green" "./deploy_instance.sh ostype agedtime [instance_type]"
+      print_color "green" "The value range of the arguments: "
+      print_color "green" "1. valid ostype: amzn, amzn2, centos6, centos7, ubuntu"
+      print_color "green" "2. agedtime: 1-7 "
+      print_color "green" "3. instance_type: default t2_micro, valid instance_type: t2.micro, t2.small, t3.micro"
       ;;
     ostype)
       print_color "red" "Please input valid ostype: amzn, amzn2, centos6, centos7, ubuntu"
@@ -95,7 +123,7 @@ fi
 ostype=$1
 
 # check whether 1 <= agedtime <=7, otherwise iprint usage() and exit
-if (( $2 <1 || $2 > 7)); then
+if (( $2 <1 || $2 > 7 )); then
   usage 'agedtime'
   exit
 fi
@@ -109,7 +137,6 @@ if [[ $# -eq 3 ]];  then
     usage 'instance_type'
     exit
   fi
-  instance_type=$3
 fi
 echo "input correct"
 
@@ -156,42 +183,15 @@ echo "Find the latest image of $ostype: ${image_id}"
  
 #  Create EC2 instance for osype with instance_type with below settings:
 print_color "green" "-------------------------Create EC2 instance---------------------------"
-# set variables
-KEY_NAME='da-key'
-VPC_NAME='da-c02-vpc'
-VPC_ID=$(aws ec2 describe-vpcs \
-    --filter "Name=tag:Name,Values=$VPC_NAME" \
-    --query Vpcs[].VpcId --output text)
-echo $VPC_ID
-PRIVATE_SUBNET_A_NAME='da-c02-private-a'
-PRIVATE_SUBNET_A_ID=$(aws ec2 describe-subnets  \
-    --filter "Name=tag:Name,Values=$PRIVATE_SUBNET_A_NAME" \
-    --query 'Subnets[].SubnetId' --output text)
-echo "${PRIVATE_SUBNET_A_ID}"
-
-SG_PRIVATE_NAME='da-c02-private-sg'
-SG_PRIVATE_ID=$(aws ec2 describe-security-groups \
-    --filters Name=vpc-id,Values="${VPC_ID}" Name=group-name,Values="${SG_PRIVATE_NAME}" \
-    --query  'SecurityGroups[*].[GroupId]'  --output text)
-echo "${SG_PRIVATE_ID}"
-
-# start_time=$(date -d "$(TZ='Australia/Melbourne' date)" +%Y%m%d%H%M%S)
-# echo ${start_time}
-## AgedTime: yyyymmddhhmm (current time + agedtime days in Australia/Melbourne Time)
-stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days -3600 seconds" +%Y%m%d%H%M%S)
-echo ${stop_time}
-
 # Create user_data file
 cat << EOF > ./instance_userdata.txt
 #!/bin/bash
 cat <<EOT >> /etc/motd
-'OSType: $ostype'
+"OSType: ${ostype}"
 "Please be notified that your instance will be terminated by  ${stop_time}"
 EOT
 EOF
 
-EC2_NAME='ostype_test'
-RULE='ec2-startstop;1900;;all'
 # Create instance
 instance_id=$(aws ec2 run-instances \
     --image-id "$image_id" \
@@ -202,7 +202,7 @@ instance_id=$(aws ec2 run-instances \
     --security-group-ids "$SG_PRIVATE_ID" \
     --no-associate-public-ip-address \
     --user-data file://instance_userdata.txt  \
-    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$EC2_NAME},{Key=AgedTime,Value=$stop_time},{Key=scheduler,Value=$RULE}]"  \
+    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$EC2_NAME},{Key=AgedTime,Value=$stop_time},{Key=scheduler:ec2-startstop,Value=$RULE}]"  \
     --query 'Instances[*].InstanceId' --output text)
 
 private_ip_address=$(aws ec2 describe-instances \
@@ -227,3 +227,6 @@ done
 # Print out private ip and 
 print_color "green" "-------------------------print out instance id and private ip--------------------------"
 print_color "green" "Outputs: InstanceId=\"$instance_id\", PrivateIpAddress=\"$private_ip_address\""
+
+# Clean up the tempt file
+rm ./instance_userdata.txt
