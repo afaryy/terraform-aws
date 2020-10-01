@@ -26,6 +26,7 @@ Code Directory | Tasks | AWS services  | Task Description Link
 [TDL-07-EC2-Cloudwatch-loggroup-metricfilter](./TDL-07-EC2-Cloudwatch-loggroup-metricfilter) | Based on code TDL-06,  generate 404 log message to CW log group apache-access-log, create metric filter (HTTP 404 errors) and metric.| Cloudwatch, EC2, S3 | [To-do-list-07](./00-To-do-list/To-do-list-07) 
 [TDL-08-EC2-Cloudwatch-alarm-SNS](./TDL-08-EC2-Cloudwatch-alarm-SNS) | Based on code TDL-07, Create one CW alarm based on CW metrics, once alarm is triggered, send notificaiton to your email .| Cloudwatch, SNS, EC2, S3 | [To-do-list-08](./00-To-do-list/To-do-list-08) 
 [TDL-09-shell-EC2](./TDL-09-shell-EC2) | Use Shell script to deploy instances with different ostypes, intance types, and add tages like agedtime.| Shell, EC2| [To-do-list-09](./00-To-do-list/To-do-list-09) 
+[TDL-10-shell-EC2-EBS](./TDL-10-shell-EC2-EBS) | Use Shell script to deploy instances with different ostypes, intance types, datadisk sizes and add tages like agedtime. Data disk: mount point /data| Shell, EC2| [To-do-list-10](./00-To-do-list/To-do-list-10) 
 
 # Authors
 
