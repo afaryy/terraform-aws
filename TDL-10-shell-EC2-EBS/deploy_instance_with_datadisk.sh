@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# Deploy AWS instance.
+# Deploy  AWS instance with different ostype, intance type, datadisk size and add tages like agedtime.
+# Data disk: mount point /data
 # Author: Yvonne Yao
 
 # set variables
@@ -39,12 +40,10 @@ SG_PRIVATE_ID=$(aws ec2 describe-security-groups \
     --query  'SecurityGroups[*].[GroupId]'  --output text)
 echo "${SG_PRIVATE_ID}"
 
-
-
 # start_time=$(date -d "$(TZ='Australia/Melbourne' date)" +%Y%m%d%H%M%S)
 # echo ${start_time}
 ## AgedTime: yyyymmddhhmm (current time + agedtime days in Australia/Melbourne Time)
-stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days -3600 seconds" +%Y%m%d%H%M%S)
+stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days 0 seconds" +%Y%m%d%H%M%S) #-3600s
 echo ${stop_time}
 
 #######################################
@@ -59,7 +58,6 @@ function print_color(){
     "red") COLOR='\033[0;31m' ;;
     "*") COLOR='\033[0m' ;;
   esac
-
   echo -e "${COLOR} $2 ${NC}"
 }
 
@@ -206,11 +204,12 @@ cat <<EOT >> /etc/motd
 "Please be notified that your instance will be terminated by  ${stop_time}"
 EOT
 cp /etc/fstab /etc/fstab.orig
-# Format /dev/xvdh if it does not contain a partition yet
+if [ "\$(file -b -s /dev/xvdf)" == "data" ]; then
+  mkfs -t ext4 /dev/xvdf
+fi
 mkfs -t ext4 /dev/xvdf
 mkdir -p /data
 mount /dev/xvdf /data
-# Persist the volume in /etc/fstab so it gets mounted again
 echo '/dev/xvdf /data ext4 defaults,nofail 0 2' >> /etc/fstab
 sudo umount /data
 sudo mount -a
