@@ -260,7 +260,7 @@ do
   fi
 done
 
-# Print out private ip and 
+# Print out instance_id and private ip. 
 print_color "green" "-------------------------print out instance id and private ip--------------------------"
 print_color "green" "Outputs: InstanceId=\"$instance_id\", PrivateIpAddress=\"$private_ip_address\""
 

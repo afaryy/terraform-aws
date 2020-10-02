@@ -5,7 +5,7 @@ How to use:
    valid ostype: amzn, amzn2, centos6, centos7, ubuntu
    agedtime: 1-7
    data_disk_size: 5-100 (GB)
-   instance_type: default t2_micro, valid instance_type: t2_micro, t2_small, t3_micro
+   instance_type: default t2_micro, valid instance_type: t2.micro, t2.small, t3.micro
 
 Basic workflow:
 - function usage(), show how to use the script, such as  
@@ -13,12 +13,12 @@ Basic workflow:
    valid ostype: amzn, amzn2, centos6, centos7, ubuntu
    agedtime: 1-7
    data_disk_size: 5-100 (GB)
-   instance_type: default t2_micro, valid instance_type: t2_micro, t2_small, t3_micro
+   instance_type: default t2_micro, valid instance_type: t2.micro, t2.small, t3.micro
 - check input
   if less than 2 parameters from command line, print usage() and exit
 
 - check whehter ostype is a valid option, if ostype is an invalid ostype, print usage() and exit 
-- check whether 1 <= agedtime <=7, otherwise iprint usage() and exit
+- check whether 1 <= agedtime <=7, otherwise print usage() and exit
 - check whether instance_type is valid, otherwise iprint usage() and exit
 - Find the latest image id for ostype and print out the image_id, image_name
 - Create EC2 instance for osype with instance_type with below settings:
