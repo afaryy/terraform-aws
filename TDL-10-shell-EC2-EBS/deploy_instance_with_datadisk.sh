@@ -1,13 +1,14 @@
 #!/bin/bash
 #
-# Deploy AWS instance.
+# Deploy  AWS instance with different ostype, intance type, datadisk size and add tages like agedtime.
+# Data disk: mount point /data
 # Author: Yvonne Yao
 
 # set variables
-
 ostype=$1
 agedtime=$2
-instance_type=${3:-t2.micro}  # default value 
+data_disk_size=$3
+instance_type=${4:-t2.micro}  # default value 
 
 export AWS_DEFAULT_REGION='ap-southeast-2'
 DEFAULT_TIME_ZONE='Australia/Melbourne'
@@ -18,29 +19,31 @@ LIST_INSTANCE_TYPE=('t2.micro' 't2.small' 't3.micro')
 
 KEY_NAME='da-key'
 VPC_NAME='da-c02-vpc'
+EC2_NAME="${1}_test8"
+RULE=';1900;;all'
+DEVICE_NAME='/dev/sdf'
+PRIVATE_SUBNET_A_NAME='da-c02-private-a'
+SG_PRIVATE_NAME='da-c02-private-sg'
+
 VPC_ID=$(aws ec2 describe-vpcs \
     --filter "Name=tag:Name,Values=$VPC_NAME" \
     --query Vpcs[].VpcId --output text)
 echo $VPC_ID
-PRIVATE_SUBNET_A_NAME='da-c02-private-a'
+
 PRIVATE_SUBNET_A_ID=$(aws ec2 describe-subnets  \
     --filter "Name=tag:Name,Values=$PRIVATE_SUBNET_A_NAME" \
     --query 'Subnets[].SubnetId' --output text)
 echo "${PRIVATE_SUBNET_A_ID}"
 
-SG_PRIVATE_NAME='da-c02-private-sg'
 SG_PRIVATE_ID=$(aws ec2 describe-security-groups \
     --filters Name=vpc-id,Values="${VPC_ID}" Name=group-name,Values="${SG_PRIVATE_NAME}" \
     --query  'SecurityGroups[*].[GroupId]'  --output text)
 echo "${SG_PRIVATE_ID}"
 
-EC2_NAME="${ostype}_test"
-RULE=';1900;;all'
-
 # start_time=$(date -d "$(TZ='Australia/Melbourne' date)" +%Y%m%d%H%M%S)
 # echo ${start_time}
 ## AgedTime: yyyymmddhhmm (current time + agedtime days in Australia/Melbourne Time)
-stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days -3600 seconds" +%Y%m%d%H%M%S)
+stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days 0 seconds" +%Y%m%d%H%M%S) #-3600s
 echo ${stop_time}
 
 #######################################
@@ -55,7 +58,6 @@ function print_color(){
     "red") COLOR='\033[0;31m' ;;
     "*") COLOR='\033[0m' ;;
   esac
-
   echo -e "${COLOR} $2 ${NC}"
 }
 
@@ -79,26 +81,27 @@ function list_include_item {
 #######################################
 # Show how to use the deploy_instance.sh.
 # Arguments:
-#   None.
+#   None
 #######################################
 function usage(){
   print_color "green" "To deploy your instance, please run deploy_instance.sh as follows:"
-  print_color "green" "./deploy_instance.sh ostype agedtime [instance_type]"
+  print_color "green" "./deploy_instance.sh ostype agedtime data_disk_size [instance_type]"
   print_color "green" "The value range of the arguments: "
   print_color "green" "1. valid ostype: amzn, amzn2, centos6, centos7, ubuntu"
   print_color "green" "2. agedtime: 1-7 "
-  print_color "green" "3. instance_type: default t2_micro, valid instance_type: t2.micro, t2.small, t3.micro"
+  print_color "green" "3. data_disk_size: 5-100 (GB)"
+  print_color "green" "4. instance_type: default t2_micro, valid instance_type: t2.micro, t2.small, t3.micro"
 }
 
 # check input
 print_color "green" "-----------------------------Your input:-------------------------------"
-echo "ostype=$ostype,agedtime=$agedtime,instance_type=$instance_type"
+echo "ostype=$1,agetime=$2,data_disk_size=$3,instance_type=$4"
 print_color "green" "-----------------------------Check input-------------------------------"
 
 # if less than 2 parameters from command line, print usage() and exit
-if [[ $# -lt 2 || $# -gt 3 ]];  then
-  print_color "red" "Input number error.Please input no less than 2 parameters."  
+if [[ $# -lt 3 || $# -gt 4 ]];  then
   usage
+  print_color "red" "Input number error.Please input no less than 2 parameters."
   exit
 fi
 
@@ -125,9 +128,22 @@ if (( agedtime < 1 || agedtime > 7 )); then
   exit
 fi
 
+# check whether 5 <= data_disk_size <=100, otherwise iprint usage() and exit
+if ! [[ $data_disk_size =~ $re ]] ; then
+   print_color "red" "Input data_disk_size error: Not a number"
+   usage
+   exit
+fi
+
+if (( data_disk_size < 5 || data_disk_size > 100 )); then
+  print_color "red" "Input data_disk_size error. Please input valid data_disk_size: 5-100"
+  usage
+  exit
+fi
+
 # check whether instance_type is valid, otherwise iprint usage() and exit
-if [[ $# -eq 3 ]];  then
-  list_include_item "${LIST_INSTANCE_TYPE[*]}" "$instance_type"
+if [[ $# -eq 4 ]];  then
+  list_include_item "${LIST_INSTANCE_TYPE[*]}" "$4"
   result=$?
   if (( result == 1 )); then
     print_color "red" "Input instance type error.Please input valid instance_type: t2.micro, t2.small, t3.micro"
@@ -187,20 +203,43 @@ cat <<EOT >> /etc/motd
 "OSType: ${ostype}"
 "Please be notified that your instance will be terminated by  ${stop_time}"
 EOT
+cp /etc/fstab /etc/fstab.orig
+if [ "\$(file -b -s /dev/xvdf)" == "data" ]; then
+  mkfs -t ext4 /dev/xvdf
+fi
+mkfs -t ext4 /dev/xvdf
+mkdir -p /data
+mount /dev/xvdf /data
+echo '/dev/xvdf /data ext4 defaults,nofail 0 2' >> /etc/fstab
+sudo umount /data
+sudo mount -a
+EOF
+
+# Create device mapping.json file
+cat << EOF > ./mapping.json
+[
+    {
+        "DeviceName": "${DEVICE_NAME}",
+        "Ebs": {
+            "VolumeSize": ${data_disk_size}
+        }
+    }
+]
 EOF
 
 # Create instance
 instance_id=$(aws ec2 run-instances \
-    --image-id "$image_id" \
-    --instance-type "$instance_type" \
-    --count 1 \
-    --subnet-id "$PRIVATE_SUBNET_A_ID" \
-    --key-name  "$KEY_NAME" \
-    --security-group-ids "$SG_PRIVATE_ID" \
-    --no-associate-public-ip-address \
-    --user-data file://instance_userdata.txt  \
-    --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$EC2_NAME},{Key=AgedTime,Value=$stop_time},{Key=scheduler:ec2-startstop,Value=$RULE}]"  \
-    --query 'Instances[*].InstanceId' --output text)
+  --image-id "$image_id" \
+  --instance-type "$instance_type" \
+  --count 1 \
+  --subnet-id "$PRIVATE_SUBNET_A_ID" \
+  --key-name  "$KEY_NAME" \
+  --security-group-ids "$SG_PRIVATE_ID" \
+  --no-associate-public-ip-address \
+  --user-data file://instance_userdata.txt  \
+  --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=$EC2_NAME},{Key=AgedTime,Value=$stop_time},{Key=scheduler:ec2-startstop,Value=$RULE}]"  \
+  --block-device-mappings file://mapping.json \
+  --query 'Instances[*].InstanceId' --output text)
 
 private_ip_address=$(aws ec2 describe-instances \
     --instance-ids "$instance_id" \
@@ -221,9 +260,10 @@ do
   fi
 done
 
-# Print out private ip and 
+# Print out instance_id and private ip. 
 print_color "green" "-------------------------print out instance id and private ip--------------------------"
 print_color "green" "Outputs: InstanceId=\"$instance_id\", PrivateIpAddress=\"$private_ip_address\""
 
 # Clean up the tempt file
 rm ./instance_userdata.txt
+rm ./mapping.json
