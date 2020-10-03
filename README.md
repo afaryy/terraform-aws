@@ -39,6 +39,3 @@ Code Directory | Tasks | AWS services  | Task Description Link
 - Github: [https://github.com/afaryy](https://github.com/afaryy)
 - Member: [DevOps Academy](https://github.com/devopsacademyau), [DevopsGirls](devopsgirls.slack.com)
 
-# Thanks
-
-* Thank [DevOps Academy](https://github.com/devopsacademyau) very much. Four tasks of [DA-iac-01to04](.\DA-iac) come from my practices for some hands-on labs of Infrastructure As Code on DevOps Academy.
