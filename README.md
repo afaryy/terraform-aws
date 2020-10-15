@@ -10,6 +10,7 @@
 * [Install Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 * [Install Make](https://www.gnu.org/software/make/manual/html_node/index.html#toc-Overview-of-make)
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [Python](https://www.python.org/downloads/)
 
 
 # Content
@@ -30,7 +31,8 @@ Code Directory | Tasks | AWS services  | Task Description Link
 [TDL-08-EC2-Cloudwatch-alarm-SNS](./TDL-08-EC2-Cloudwatch-alarm-SNS) | Based on code TDL-07, Create one CW alarm based on CW metrics, once alarm is triggered, send notificaiton to your email .| Cloudwatch, SNS, EC2, S3 | [To-do-list-08](./00-To-do-list/To-do-list-08) 
 [TDL-09-shell-EC2](./TDL-09-shell-EC2) | Use Shell script to deploy instances with different ostypes, intance types, and add tages like agedtime.| Shell, EC2| [To-do-list-09](./00-To-do-list/To-do-list-09) 
 [TDL-10-shell-EC2-EBS](./TDL-10-shell-EC2-EBS) | Use Shell script to deploy instances with different ostypes, intance types, datadisk sizes and add tages like agedtime. Data disk: mount point /data. | Shell, EC2, EBS | [To-do-list-10](./00-To-do-list/To-do-list-10) 
-[TDL11-Terminate_Instances_with_snapshots](./TDL11-Terminate_Instances_with_snapshots) | Use python script to teminate aged instances with snapshots (Exclude Boot Volume) created for EBS before teminating. | Python, EC2, EBS | [To-do-list-11](./00-To-do-list/To-do-list-11) 
+[TDL11-Terminate_Instances<br>_with_snapshots](./TDL11-Terminate_Instances_with_snapshots) | Use python script to teminate aged instances with snapshots (Exclude Boot Volume) created for EBS before teminating. | Python, EC2, EBS, Snapshot | [To-do-list-11](./00-To-do-list/To-do-list-11) 
+[TDL12-Python-Lambda-Cloudwatch](./TDL12-Python-Lambda-Cloudwatch) | Use Terraform to deploy lambda function terminate_aged_instances_with_snapshots.<br> Create IAM role for lambda function<br>CloudWatch event rule to triger the lambda function every 5 minutes. | Python, Lambda, EC2, EBS, Snapshot, Cloudwatch | [To-do-list-12](./00-To-do-list/To-do-list-12) 
 
 
 # Author
