@@ -19,7 +19,7 @@ LIST_INSTANCE_TYPE=('t2.micro' 't2.small' 't3.micro')
 
 KEY_NAME='da-key'
 VPC_NAME='da-c02-vpc'
-EC2_NAME="${1}_test8"
+EC2_NAME="${1}_test6"
 RULE=';1900;;all'
 DEVICE_NAME='/dev/sdf'
 PRIVATE_SUBNET_A_NAME='da-c02-private-a'
@@ -43,7 +43,8 @@ echo "${SG_PRIVATE_ID}"
 # start_time=$(date -d "$(TZ='Australia/Melbourne' date)" +%Y%m%d%H%M%S)
 # echo ${start_time}
 ## AgedTime: yyyymmddhhmm (current time + agedtime days in Australia/Melbourne Time)
-stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days 0 seconds" +%Y%m%d%H%M%S) #-3600s
+stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days" +%Y%m%d%H%M) #-3600s
+# stop_time=$(date -d "$(TZ=$DEFAULT_TIME_ZONE date) $agedtime days 0 seconds" +%Y%m%d%H%M%S) #-3600s
 echo ${stop_time}
 
 #######################################
