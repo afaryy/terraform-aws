@@ -3,11 +3,9 @@
 # How to use:
 # ./terminate_aged_instances.py [current_time]
 # current_time: YYYYMMDDHHmm, default value: current time
-
 import boto3
 import sys
 import json
-import pprint
 import logging
 import datetime
 import botocore
@@ -16,15 +14,21 @@ from botocore.exceptions import ClientError
 # Import pytz to support local timezone
 import pytz
 
-logger = logging.getLogger(__name__)
+# logging
+if len(logging.getLogger().handlers) <= 0:
+    logging.basicConfig()
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-# Default time_zone, current_time
+# Default values
 region_name = 'ap-southeast-2'
-time_zone = 'Australia/Melbourne'
-tz = pytz.timezone(time_zone)
-current_time = datetime.datetime.now(tz).strftime('%Y%m%d%H%M') # if not provided, set current_time to default_current_time
-
+default_time_zone = 'Australia/Melbourne'
+current_time = 'none'
 tag_key='AgedTime'
+
+
+ec2 = boto3.client("ec2")
+resource = boto3.resource('ec2', region_name = region_name)
 
 # check current_time is provided from command line, and format is correct
 def validate_datetime_format(date_text,date_formate,date_input_format):
@@ -59,9 +63,9 @@ def get_instances_by_tag(tag_key,current_time):
                         print('agedtimeValue <= current_time')
                         instanceIds.append(instance["InstanceId"])
                         instances.append(instance)
-    #print(json.dumps(instanceIds, indent=5))
+    print(json.dumps(instanceIds, indent=5))
     #print(instanceIds, sep = "\n") 
-    pprint.pprint(instanceIds)
+    # pprint.pprint(instanceIds)
     return instances
 
 def shutdown_instance(instance_id):
@@ -81,15 +85,15 @@ def shutdown_instance(instance_id):
         logger.exception("Couldn't stop instance %s.", instance_id)
         raise e
     print(f"Waiting for Instance {instance_id} to be shutdown")
-    shutdown_instance_wait(instance_id)
+    # shutdown_instance_wait(instance_id)
 
-def shutdown_instance_wait(instance_id):
-    shutdown_instance_waiter = ec2.get_waiter('instance_stopped')
-    try:
-        shutdown_instance_waiter.wait(InstanceIds=[instance_id])
-        print(f"Instance {instance_id} has shutdown successfully")
-    except botocore.exceptions.WaiterError as e:
-        print(e)
+# def shutdown_instance_wait(instance_id):
+#     shutdown_instance_waiter = ec2.get_waiter('instance_stopped')
+#     try:
+#         shutdown_instance_waiter.wait(InstanceIds=[instance_id])
+#         print(f"Instance {instance_id} has shutdown successfully")
+#     except botocore.exceptions.WaiterError as e:
+#         print(e)
 
 def snapshots_wait(snapshot_ids):
     try:
@@ -128,7 +132,7 @@ def check_ebs(instance_id,intances):
 
 def snapshot_volumes(instance_id,intances):
     snapshot_ids=[]
-    print(f"Processing volumes attached to {instance_id} for snapshot")
+    print(f"Processing volumes attached to {instance_id} for snapshots")
     # Do a dryrun first to verify permissions
     try:
         response = ec2.create_snapshots(
@@ -143,8 +147,9 @@ def snapshot_volumes(instance_id,intances):
     except ClientError as e:
         if 'DryRunOperation' not in str(e):
             raise e
-    # Dry run succeeded, call terminate_instances without dryrun
+    # Dry run succeeded, call creare snapshots without dryrun
     try:
+        logger.info("create snapshots for instance %s.", instance_id)
         response = ec2.create_snapshots(
             Description='snapshot_'+instance_id,
             InstanceSpecification={
@@ -154,7 +159,6 @@ def snapshot_volumes(instance_id,intances):
             DryRun=False,
             CopyTagsFromSource='volume'
         )
-        logger.info("create snapshots for instance %s.", instance_id)
         print(response)
         # Check if snapshots are created completely.
         for snapid in response.get('Snapshots'):
@@ -175,45 +179,39 @@ def terminate_instances(instance_id):
             raise e
     # Dry run succeeded, call terminate_instances without dryrun
     try:
-        response = ec2.terminate_instances(InstanceIds=[instance_id], DryRun=False)
         logger.info("Terminating instance %s.", instance_id)
+        response = ec2.terminate_instances(InstanceIds=[instance_id], DryRun=False)
         print(response)
     except ClientError as e:
         logger.exception("Couldn't terminate instance %s.", instance_id)
         print(e)
         raise e
 
-def terminate_main():
-    global ec2 
-    global resource
-    global instances
-    global current_time
-    if len(sys.argv) == 2:
+def main():
+    input_number=len(sys.argv)
+    if input_number == 1:
+        tz = pytz.timezone(default_time_zone)   
+        current_time = datetime.datetime.now(tz).strftime('%Y%m%d%H%M') # if not provided, set current_time to default_current_time
+    elif input_number == 2:
         validate_datetime_format(sys.argv[1],'%Y%m%d%H%M','YYYYMMDDHHmm')
         current_time = sys.argv[1]
         print("has input")
-    elif len(sys.argv) > 2:
+    else:
         print('Input error, please only input current time or input nothing.')
     print(f'current_time:{current_time}')
-    ec2 = boto3.client("ec2")
-    resource = boto3.resource('ec2', region_name = region_name)
     instances = get_instances_by_tag(tag_key,current_time)
     for instance in instances:
         instance_id=instance.get('InstanceId')
         instance_state=instance['State']['Name']
         print(f"The instance {instance_id} state is {instance_state}.")
-        if instance_state=='terminated' or instance_state=='pending':
+        if instance_state=='terminated' or instance_state=='pending' or instance_state=='running' or instance_state=='shutting-down':
             continue
-        elif instance_state=='running' or instance_state=='shutting-down' or instance_state=='stopping' or instance_state=='stopped':
-            if instance_state=='running':
-                print(f"The instance {instance_id} state is {instance_state}, will be shutdown first.")
-                shutdown_instance(instance_id)
-            elif instance_state=='shutting-down' or instance_state=='stopping': 
-                print(f"The instance {instance_id} state is {instance_state}, will wait for stopped first.")
-                shutdown_instance_wait(instance_id)
-            else: #instance_state=='stopped'
-                  print(f"The instance {instance_id} state is {instance_state}, will be teminated.")
+        elif instance_state=='running':
+            print(f"The instance {instance_id} state is {instance_state}, will be shutdown first.")
+            shutdown_instance(instance_id)
+        elif instance_state=='stopped':
             check_ebs(instance_id,instance)
+            print(f"The instance {instance_id} state is {instance_state}, will be teminated.")
             snapshot_volumes(instance_id,instance)
             terminate_instances(instance_id)
         else:
@@ -221,4 +219,4 @@ def terminate_main():
 
 # Local version
 if  __name__ =='__main__':
-    terminate_main()
+    main()
