@@ -204,7 +204,7 @@ def main():
         instance_id=instance.get('InstanceId')
         instance_state=instance['State']['Name']
         print(f"The instance {instance_id} state is {instance_state}.")
-        if instance_state=='terminated' or instance_state=='pending' or instance_state=='running' or instance_state=='shutting-down':
+        if instance_state=='terminated' or instance_state=='pending' or instance_state=='shutting-down':
             continue
         elif instance_state=='running':
             print(f"The instance {instance_id} state is {instance_state}, will be shutdown first.")
