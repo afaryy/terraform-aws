@@ -1,7 +1,7 @@
 # Overview
 
 * [Terraform](https://www.terraform.io/) is an Infrastructure as Code tool to provision and manage any cloud, infrastructure, or service.
-* These files are about my practices to provision, manage and automate multiple [AWS services](https://aws.amazon.com/) through [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) scripts.
+* These files are about my practices to provision, manage and automate multiple [AWS services](https://aws.amazon.com/) through [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) , Bash, [Python](https://www.python.org/downloads/) scripts.
 
 
 
@@ -11,6 +11,7 @@
 * [Install Make](https://www.gnu.org/software/make/manual/html_node/index.html#toc-Overview-of-make)
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [Python](https://www.python.org/downloads/)
+* [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html)
 
 
 # Content
