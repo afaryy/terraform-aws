@@ -1,3 +1,62 @@
 Python script to practice CW log insight 
 Check VPC flowlog and summary
 Detailed to be populated later
+
+Pre-requsites:
+- VPC FLowlog has been enabled on VPC and logs have been shipped to CW log group
+- Generate REJECT VPC logs
+* Update SG in To-do-list-06, only allows inbound tcp/80, 443 from your VPC CIDR and you home ip
+* Deploy/update To-do-list-06
+* SSH to EC2 instance from your laptop to generate REJECT VPC FLowlog records for tcp/22
+* Access the web server from your home laptop to generate  ACCEPT VPC Flowlog record for tcp/80
+* Access non existance web url from your home laptop to generate 404 records for HTTP server
+* Access the web server from your iPhone using 4G nework to generate REJECT VPC Flowlog record for tcp/80
+
+Tasks:
+1. From AWS CloudWatch Console, query VPC Flowlog
+Reference filters:
+https://docs.aws.amazon.com/vpc/latest/userguide/working-with-flow-logs.html
+[version, accountid, interfaceid, srcaddr, dstaddr, srcport, dstport, protocol, packets, bytes, start, end, action, logstatus]
+https://medium.com/@crishantha/analyzing-aws-vpc-flow-logs-via-cloudwatch-logs-insight-and-athena-587c49246f7f
+- Query ACCEPTed packets towards tcp/80 
+- Query REJECTed packets towards tcp/80 
+- Query REJECTed packets towards tcp/22
+
+2. From AWS CloudWatch Console, query CW log apache-access-log to find out 404 access log
+
+3. From AWS CloudWatch console, run CW insight query against VPC Flowlog group to summary (check out reference to CW query syntax)
+- Source IP and destination ip address, destination network port of REJECT packet
+- Source ip address and request summary to access HTTP server (destination ip: http server, port 80)
+
+4. From AWS CloudWatch console, run CW insight query against apache-access-log 
+- Source IP addresses and summary to access HTTP server
+- URLs in 404 message
+- Requests summary for each url 
+- Top 5/10 popular URLs in access log
+
+5. Python Script to automate either task 3 and/or task 4
+  Required paramters: 
+  - query period: last x days/hours
+  Output:
+  - CSV file which can be opened by Excel
+
+Questions:
+1. https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/cloudwatch_limits_cwl.html
+   Query results displayed in console
+   By default, up to 1000 rows of query results are displayed on the console. You can use the limit command in a query to increase this to as many as 10,000 rows. For more information, see CloudWatch Logs Insights Query Syntax.
+2. What if there are more than 10000+ records returned by CW insight?
+3. Can we paginate CW Insight query?
+
+
+Reference:
+- https://www.youtube.com/watch?v=RnN1o4Zdego
+- https://www.youtube.com/watch?v=g1wxfYVjCPY
+- https://www.youtube.com/watch?v=2s2xcwm8QrM
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html
+- https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs-cwl.html
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html
+- https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax-examples.html
+- https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/logs.html#CloudWatchLogs.Client.start_query
+- https://boto3.amazonaws.com/v1/documentation/api/latest/guide/paginators.html
+- https://www.pattheimposter.com/2020/02/02/vpc-flow-logs-part-1-enabling-logging-to-cloudwatch/
+
