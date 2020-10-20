@@ -1,7 +1,7 @@
 # Overview
 
 * [Terraform](https://www.terraform.io/) is an Infrastructure as Code tool to provision and manage any cloud, infrastructure, or service.
-* These files are about my practices to provision, manage and automate multiple [AWS services](https://aws.amazon.com/) through [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) , Bash, [Python](https://www.python.org/downloads/) scripts.
+* These files are about my solutions to provision, manage and automate multiple [AWS services](https://aws.amazon.com/) through [Terraform](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) , Bash, [Python](https://www.python.org/downloads/) scripts.
 
 
 
@@ -16,7 +16,7 @@
 
 # Content
 
-Code Directory | Tasks | AWS services  | Task Description Link 
+Code Directory | Decription | AWS services  | Task Description Link 
 ------------ | ------------- | ------------- | ------------- 
 [TDL-01-EC2instance-SG-Subnet-EIP-EBS](./TDL-01-EC2instance-SG-Subnet-EIP-EBS/terraform-code/) | Create a EC2 instance in public subnet | EC2, Security Group, Subnet, EIP, EBS | [To-do-list-01](./00-To-do-list/To-do-list-01) 
 [TDL-02-EC2-userdata-Route53-DNS](./TDL-02-EC2-userdata-Route53-DNS/terraform-code/) | Launch an EC2 instance in public subnet, install Apache HTTP server using below user data script, create Security group for it.<br> From jumpbox SSH to the VM and check httpd.<br>Create an Route 53 record in your domain and point to the VM public ip.<br>Access the web server using DNS name. | EC2, Route53, DNS | [To-do-list-02](./00-To-do-list/To-do-list-02) 
@@ -34,7 +34,7 @@ Code Directory | Tasks | AWS services  | Task Description Link
 [TDL-10-shell-EC2-EBS](./TDL-10-shell-EC2-EBS) | Use Shell script to deploy instances with different ostypes, intance types, datadisk sizes and add tages like agedtime. Data disk: mount point /data. | Shell, EC2, EBS | [To-do-list-10](./00-To-do-list/To-do-list-10) 
 [TDL11-Terminate_Instances<br>_with_snapshots](./TDL11-Terminate_Instances_with_snapshots) | Use python script to teminate aged instances with snapshots (Exclude Boot Volume) created for EBS before teminating. | Python, EC2, EBS, Snapshot | [To-do-list-11](./00-To-do-list/To-do-list-11) 
 [TDL12-Python-Lambda-Cloudwatch](./TDL12-Python-Lambda-Cloudwatch) | Use Terraform to deploy lambda function terminate_aged_instances_with_snapshots.<br> Create IAM role for lambda function<br>CloudWatch event rule to triger the lambda function every 5 minutes. | Python, Lambda, EC2, EBS, Snapshot, Cloudwatch | [To-do-list-12](./00-To-do-list/To-do-list-12) 
-
+[TDL13-VPC-Flowlog-Cloudwatch](./TDL13-VPC-Flowlog-Cloudwatch) | Terraform template to create VPC Flowlog for VPC. | VPC Flowlog, IAM, Cloudwatch | [To-do-list-13](./00-To-do-list/To-do-list-13) 
 
 # Author
 
