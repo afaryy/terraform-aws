@@ -35,7 +35,7 @@ Code Directory | Decription | AWS services
 [TDL11-Terminate_Instances<br>_with_snapshots](./TDL11-Terminate_Instances_with_snapshots) | Use python script to teminate aged instances with snapshots (Exclude Boot Volume) created for EBS before teminating. | Python, EC2, EBS, Snapshot 
 [TDL12-Python-Lambda-Cloudwatch](./TDL12-Python-Lambda-Cloudwatch) | Use Terraform to deploy lambda function terminate_aged_instances_with_snapshots.<br> Create IAM role for lambda function<br>CloudWatch event rule to triger the lambda function every 5 minutes. | Python, Lambda, EC2, EBS, Snapshot, Cloudwatch 
 [TDL13-VPC-Flowlog-Cloudwatch](./TDL13-VPC-Flowlog-Cloudwatch) | Terraform template to create VPC Flowlog for VPC. | VPC Flowlog, IAM, Cloudwatch 
-[TTDL14-Python-VPCLoggroup-CW-Loginsight](./TDL14-Python-VPCLoggroup-CW-Loginsight) | Based on TDL-06 and TDL-13, install and configure CW agent on EC2 based on config file in S3, Create VPC Flowlog for VPC. Use Python Script to automated query CW logs against VPC Flowlog group and apache-access-log group. | Python, CW logs insight, IAM, EC2, VPC Flowlog, Cloudwatch Agent
+[TDL14-Python-CWloginsight-VPCFlowlog-CWagent](./TDL14-Python-CWloginsight-VPCFlowlog-CWagent) | Based on TDL-06 and TDL-13, install and configure CW agent on EC2 based on config file in S3, Create VPC Flowlog for VPC. Use Python Script to automated query CW logs against VPC Flowlog group and apache-access-log group. | Python, CW logs insight, IAM, EC2, VPC Flowlog, Cloudwatch Agent
 
 
 # Author
