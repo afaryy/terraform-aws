@@ -198,6 +198,7 @@ def main():
         print("has input")
     else:
         print('Input error, please only input current time or input nothing.')
+        return
     print(f'current_time:{current_time}')
     instances = get_instances_by_tag(tag_key,current_time)
     for instance in instances:
@@ -216,6 +217,7 @@ def main():
             terminate_instances(instance_id)
         else:
              print(f"Warning : the instance {instance_id} state is not valid, please check it")
+    return
 
 # Local version
 if  __name__ =='__main__':
