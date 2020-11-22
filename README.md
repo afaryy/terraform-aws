@@ -12,6 +12,7 @@
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [Python](https://www.python.org/downloads/)
 * [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html)
+* [Jenkins](https://www.jenkins.io/doc/book/installing/)
 
 
 # Content
@@ -32,12 +33,11 @@ Code Directory | Decription | AWS services
 [TDL-08-EC2-Cloudwatch-alarm-SNS](./TDL-08-EC2-Cloudwatch-alarm-SNS) | Based on code TDL-07, Create one CW alarm based on CW metrics, once alarm is triggered, send notificaiton to your email .| Cloudwatch, SNS, EC2, S3 
 [TDL-09-shell-EC2](./TDL-09-shell-EC2) | Use Shell script to deploy instances with different ostypes, intance types, and add tages like agedtime.| Shell, EC2
 [TDL-10-shell-EC2-EBS](./TDL-10-shell-EC2-EBS) | Use Shell script to deploy instances with different ostypes, intance types, datadisk sizes and add tages like agedtime. Data disk: mount point /data. | Shell, EC2, EBS 
-[TDL11-Terminate_Instances<br>_with_snapshots](./TDL11-Terminate_Instances_with_snapshots) | Use python script to teminate aged instances with snapshots (Exclude Boot Volume) created for EBS before teminating. | Python, EC2, EBS, Snapshot 
+[TDL11-Terminate_Instances<br>_with_snapshots](./TDL11-Terminate_Instances_with_snapshots) | Use python script to teminate aged instances with snapshots (Exclude Root Volume) created for EBS before teminating. | Python, EC2, EBS, Snapshot 
 [TDL12-Python-Lambda-Cloudwatch](./TDL12-Python-Lambda-Cloudwatch) | Use Terraform to deploy lambda function terminate_aged_instances_with_snapshots.<br> Create IAM role for lambda function<br>CloudWatch event rule to triger the lambda function every 5 minutes. | Python, Lambda, EC2, EBS, Snapshot, Cloudwatch 
 [TDL13-VPC-Flowlog-Cloudwatch](./TDL13-VPC-Flowlog-Cloudwatch) | Terraform template to create VPC Flowlog for VPC. | VPC Flowlog, IAM, Cloudwatch 
 [TDL14-Python-CWloginsight-VPCFlowlog-CWagent](./TDL14-Python-CWloginsight-VPCFlowlog-CWagent) | Based on TDL-06 and TDL-13, install and configure CW agent on EC2 based on config file in S3, Create VPC Flowlog for VPC. Use Python Script to automated query CW logs against VPC Flowlog group and apache-access-log group. | Python, CW logs insight, IAM, EC2, VPC Flowlog, Cloudwatch Agent
-
-
+[TDL15-CloudFormation-Jenkins](./TDL15-CloudFormation-Jenkins) | Create a AWS CloudFormation Jenkins Template to create a Stand Alone Jenkins server stack using a single EC2 instance with attaching another EBS volume mount on /var/lib/jenkins, for further using Jenkins to run Terraform, Shell and Python scripts on GitHub.<br>When the input SnapshotId is not empty, create volume from snapshot.Use UserData to mount volume, install Jenkins, Git, AWS CLI, Python, Boto3, Terraform etc. | CloudFormation, Jenkins Instance, EBS, Userdata, Vmvare Workstation
 # Author
 
 ## Yingying(Yvonne) Yao

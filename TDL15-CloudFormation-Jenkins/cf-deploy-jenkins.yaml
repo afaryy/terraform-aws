@@ -1,0 +1,245 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS CloudFormation Jenkins Template to create a Stand Alone Jenkins server stack using a single EC2 instance with an attached EBS volume that will be used for /var/lib/jenkins
+# Define Parameter Variables that will be used throughout this Cloudformation template.
+Parameters:
+  InstanceType:
+    Description: Type of EC2 instance to launch for the server. 
+    Type: String
+    Default: t2.micro
+    ConstraintDescription: Must be a valid EC2 instance type
+    AllowedValues: 
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - m5.12xlarge
+      - m5.24xlarge
+  VpcId:
+    Description: VPC ID that this stack will be launched in.
+    Type: AWS::EC2::VPC::Id
+    Default: "vpc-02ec2836691642ace"
+    AllowedPattern: "[a-z0-9-]*"
+  SubnetId:
+    Description: VPC Subnet that this stack will be launched in.
+    Type: AWS::EC2::Subnet::Id
+    Default: "subnet-04709dce111382a62"
+    AllowedPattern: "[a-z0-9-]*"
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance(s).
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: "da-key"
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair
+  SSHLocation:
+    Description: The source IP address (/32) or source IP address range (x.x.x.x/x) that will be allowed to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
+  JenkinsPort:
+    Description: The Port that will be used to access Jenkins (Must be port 1024 or above, unless changing jenkins user).
+    Type: Number
+    MinValue: 1024
+    MaxValue: 65535
+    Default: 8080
+  InstanceTagName:
+    Description: Instance Name tag that will be used to define the Name of the instance resource(s)
+    Type: String
+    Default: Jenkins
+  SnapshotId: 
+    Description: The Id of a snapshot (optional)
+    Default: ""
+    Type: String
+  VolumeSize: 
+    Description: Volum Size for Jenkins data volume that we will use for /var/lib/jenkins
+    Default: "25"
+    Type: String
+  PythonVersion: 
+    Description: Python Version
+    Default: "3.8.6"
+    Type: String
+  TerraformVersion: 
+    Description: Terraform Version
+    Default: "0.13.5"
+    Type: String
+
+# if SnapshotId is not empty, create volume from snapshot
+Conditions: 
+  UseSnapshot: !Not [!Equals [!Ref SnapshotId, ""]]
+
+# Create an easy mapping, simply mapping the region selected to the appropriate Amazon Linux 2 AMI
+Mappings: 
+  RegionMap: 
+    'ap-southeast-2': 
+      AMI: 'ami-076e39b6b14e3bb20'
+
+# Define Resources that will be launched via this template
+Resources:
+  # EC2 Server Instance Definition
+  JenkinsInstance:
+    Description: Jenkins Standalone EC2 Instance
+    Type: AWS::EC2::Instance
+    # Properties of the Instance that we are launching. Here we define things like EBS volumes, SG's, The AMI used, etc..
+    Properties:
+      # Pull the Image or AMI from the RegionMap Map we defined earlier
+      ImageId: !FindInMap
+        - RegionMap
+        - !Ref 'AWS::Region'
+        - AMI
+      # Pull the Intance Type, Subnet, KeyName, etc from the Parameters we defined earlier
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          DeleteOnTermination: true
+          SubnetId: !Ref SubnetId
+          # This defines the SG that we will place on the ENI, We will create the SG after the instance resource definition
+          GroupSet: 
+            - !Ref ServerSecurityGroup
+      KeyName: !Ref KeyName
+      Tags:
+       - Key: Name
+         Value: !Ref InstanceTagName
+      # Use the user data to install Jenkins and other tools.
+      UserData:
+        Fn::Base64: !Sub |   
+          #!/bin/bash -x
+          # Wait for additional EBS volume attached to JenkinsInstance
+          while true; do lsblk | grep xvdb && break; sleep 10; done
+          # Attach the additional EBS volume and mount the volume in /var/lib/Jenkins
+          sudo mkdir -p /var/lib/jenkins  
+          if [ -z ${SnapshotId} ] ;then echo -e "o\nn\np\n1\n\n\nw" | sudo fdisk /dev/sdb; sleep 3; sudo mkfs.ext4 /dev/sdb1; sudo e2label /dev/sdb1 JENKINS; fi
+          echo -e "LABEL=JENKINS     /var/lib/jenkins    ext4   defaults 0 0" >> /etc/fstab
+          mount -a
+          # Ensure that your software packages are up to date on your instance
+          sudo yum update –y
+          # install Jenkins
+          sudo yum install -y java-1.8.0-openjdk-devel
+          # Enable the Jenkins repository. Download the repo file and import the GPG key
+          sudo yum install -y wget
+          # sudo rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+          sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+          sudo yum clean all
+          sudo rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
+          # make jenkins dirs:
+          sudo mkdir -p /home/jenkins /var/lib/jenkins/.ssh /var/cache/jenkins/war /var/log/jenkins
+          # Install the latest stable version of Jenkins
+          sudo yum install -y jenkins
+          # check whether Jenkins is running, type:
+          # systemctl status jenkins
+          # check jenkins login: 
+          sudo useradd -d /var/lib/jenkins jenkins # login dir
+          usermod -s /bin/bash jenkins # shell use dir
+          # set_jenkins_port  
+          sudo sed -i "s/JENKINS_PORT=\"8080\"/JENKINS_PORT=\"${JenkinsPort}\"/g" /etc/sysconfig/jenkins
+          # sshconfig: 
+          sudo echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /var/lib/jenkins/.ssh/config
+          # ssh-keyscan -H hostname.com >> /var/lib/jenkins/.ssh/known_hosts
+          # Generate SSH key: 
+          if [ -z ${SnapshotId} ] ;then sudo ssh-keygen -t rsa -b 2048 -C jenkins@jenkins -N "" -f /var/lib/jenkins/.ssh/id_rsa; sudo cat /var/lib/jenkins/.ssh/id_rsa.pub > /var/lib/jenkins/.ssh/authorized_keys; fi
+          # set permissions
+          sudo chown -R jenkins:jenkins /home/jenkins /var/lib/jenkins /var/cache/jenkins /var/log/jenkins; sudo chmod 0700 /var/lib/jenkins/.ssh; sudo chmod 0600 /var/lib/jenkins/.ssh/*
+          # firewall: 
+          sudo firewall-cmd --permanent --add-service=ssh; sudo firewall-cmd --permanent --add-port='${JenkinsPort}'/tcp; sudo firewall-cmd --reload
+          # start the Jenkins service and enable it to start on system boot
+          sudo systemctl start jenkins
+          sudo systemctl enable jenkins
+          # install git
+          yum install -y git
+          # install AWS CLI
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+          # install python
+          sudo yum -y groupinstall "Development Tools"
+          # sudo yum -y install openssl-devel bzip2-devel libffi-devel
+          sudo yum -y install bzip2-devel expat-devel gdbm-devel \
+            ncurses-devel openssl-devel readline-devel wget \
+            sqlite-devel tk-devel xz-devel zlib-devel libffi-devel
+          sudo wget https://www.python.org/ftp/python/${PythonVersion}/Python-${PythonVersion}.tgz
+          tar -xf Python-${PythonVersion}.tgz
+          cd Python-${PythonVersion}
+          ./configure --enable-optimizations # Setup installation by running the configure script, performs a number of checks to make sure all of the dependencies on your system are present
+          make -j 4 # Start the Python 3.8 build process 
+          sudo make altinstall #install the Python binaries
+          alias python="/usr/local/bin/python3.8"
+          # intall boto3
+          pip3.8 install boto3
+          # install terraform 
+          sudo wget https://releases.hashicorp.com/terraform/${TerraformVersion}/terraform_${TerraformVersion}_linux_amd64.zip
+          unzip terraform_${TerraformVersion}_linux_amd64.zip && sudo rm terraform_${TerraformVersion}_linux_amd64.zip -f && sudo mv terraform /usr/local/bin/
+
+  # Define the Security Group that will be appended to the ENI of the Instance.  
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group that will be used for the Jenkins instance. Open ports 22, and the JenkinsPort
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: !Ref JenkinsPort
+          ToPort: !Ref JenkinsPort
+          CidrIp: !Ref SSHLocation       
+
+  # Create the EBS volume that we will use for /var/lib/jenkins
+  JenkinsDataVolume:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: !Ref VolumeSize
+      SnapshotId:  !If [UseSnapshot, !Ref SnapshotId, !Ref "AWS::NoValue"]
+      Encrypted: true
+      AvailabilityZone: !GetAtt JenkinsInstance.AvailabilityZone
+      Tags:
+        - Key: Role
+          Value: Data
+    DeletionPolicy: Snapshot
+
+  # Attach EBS volume to instance
+  MountPoint:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      InstanceId: !Ref JenkinsInstance
+      VolumeId: !Ref JenkinsDataVolume
+      Device: /dev/sdb
+
+# Specify any outputs for the stack.
+Outputs:
+  TemplateID:
+    Description: 'Jenkins Server Template'
+    Value: 'Jenkins Server Template'
+  PublicIp:
+    Description: 'The Public IP address of the EC2 Instance'
+    Value: !GetAtt JenkinsInstance.PublicIp
+  ServerAddress:
+    Description: 'The public DNS address for this instance'
+    Value: !GetAtt JenkinsInstance.PublicDnsName
+  JenkinsPass:
+    Description: Jenkins One Time Install Password 
+    Value: !Sub "ssh ec2-user@${JenkinsInstance.PublicIp} sudo cat /var/lib/jenkins/secrets/initialAdminPassword"
+  JenkinsKey:
+    Description: Jenkins SSH Public Key
+    Value: !Sub "ssh ec2-user@${JenkinsInstance.PublicIp} sudo cat /var/lib/jenkins/.ssh/id_rsa.pub"
+  InstanceID:
+    Description: 'The ID of the Jenkins instance that was launched'
+    Value: !Ref JenkinsInstance
+
+# Validate the Template 
+# aws cloudformation validate-template --template-body file://cf-deploy-jenkins.yaml
