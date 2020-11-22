@@ -205,14 +205,11 @@ cat <<EOT >> /etc/motd
 "Please be notified that your instance will be terminated by  ${stop_time}"
 EOT
 cp /etc/fstab /etc/fstab.orig
-if [ "\$(file -b -s /dev/xvdf)" == "data" ]; then
+if [ "\$(file -b -s /dev/xvdf)" != "data" ]; then
   mkfs -t ext4 /dev/xvdf
 fi
-mkfs -t ext4 /dev/xvdf
 mkdir -p /data
-mount /dev/xvdf /data
 echo '/dev/xvdf /data ext4 defaults,nofail 0 2' >> /etc/fstab
-sudo umount /data
 sudo mount -a
 EOF
 
