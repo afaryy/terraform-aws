@@ -4,7 +4,7 @@ for further using Jenkins to run Terraform, Shell and Python scripts on GitHub
 When the input Snapshotid is not empty,  create volume from snapshot
 - input paramters: InstanceType, VpcId, SubnetId, KeyName, SSHLocation, JenkinsPort,
                    SnapshotId, VolumeSize, PythonVersion, TerraformVersion
-- output:          TemplateID, PublicIp, ServerAddress, JenkinsPass,JenkinsKey, InstanceID
+- output:          TemplateID, PublicIp, ServerAddress,InstanceID
 
 Tasks:
 1. Use VMware Workstaion to create two Centos8 VM as Jenkins master and worker, to test the distributed build process.
@@ -12,7 +12,7 @@ Tasks:
 - if SnapshotId is not empty, create volume from snapshot, there will be several different operations to Mount Volume and config Jenkins. 
   For example, we don't need to do fdisk, mkfs, e2label and generate SSH key.
 - volume mount point: /var/lib/jenkins
-3. From AWS CloudWatch Console, launch a Jenkins instance with the user data to test the process.
+3. From AWS EC2 Console, launch a Jenkins instance with the user data to test the process.
 4. Create a AWS CloudFormation Template to create a Stand Alone Jenkins server
 - Create a EBS volume and attach to a Jenkins Instance. 
 - if SnapshotId is not empty, create volume from snapshot. The SnapshotId is the input SnapshotId, else set it to AWS::NoValue
