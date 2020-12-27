@@ -1,0 +1,379 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create a Jenkins server stack using router53 + elb + autoscaling a single EC2 instance with an attached EBS volume (mounted at /var/lib/jenkins; encrypted by KMS CMK) 
+# Define Parameter Variables that will be used throughout this Cloudformation template.
+Parameters:
+  InstanceType:
+    Description: Type of EC2 instance to launch for the server. 
+    Type: String
+    Default: t2.micro
+    ConstraintDescription: Must be a valid EC2 instance type
+    AllowedValues: 
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - m5.12xlarge
+      - m5.24xlarge
+  AMI: 
+    Description: Image Id
+    Default: "ami-076e39b6b14e3bb20"
+    Type: String  
+  VpcId:
+    Description: VPC ID that this stack will be launched in.
+    Type: AWS::EC2::VPC::Id
+    Default: "vpc-02ec2836691642ace"
+    AllowedPattern: "[a-z0-9-]*"
+  AvailabilityZone:
+    Description: VPC Subnet that this stack will be launched in.
+    Type: "AWS::EC2::AvailabilityZone::Name"
+    Default: 'ap-southeast-2a'
+    AllowedPattern: "[a-z0-9-]*"
+  SubnetId:
+    Description: VPC Subnet that this stack will be launched in.
+    Type: AWS::EC2::Subnet::Id
+    Default: "subnet-04709dce111382a62"
+    AllowedPattern: "[a-z0-9-]*"
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance(s).
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: "da-key"
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair
+  SSHLocation:
+    Description: The source IP address (/32) or source IP address range (x.x.x.x/x) that will be allowed to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
+  JenkinsPort:
+    Description: The Port that will be used to access Jenkins (Must be port 1024 or above, unless changing jenkins user).
+    Type: Number
+    MinValue: 1024
+    MaxValue: 65535
+    Default: 8080
+  InstanceTagName:
+    Description: Instance Name tag that will be used to define the Name of the instance resource(s)
+    Type: String
+    Default: Jenkins
+  SnapshotId: 
+    Description: The Id of a snapshot (optional)
+    Default: ""
+    Type: String
+  VolumeSize: 
+    Description: Volum Size for Jenkins data volume that we will use for /var/lib/jenkins
+    Default: "25"
+    Type: String
+  KmsKeyId:
+     Description: Customer managed keys
+     Default: "8160b75f-7dcd-4398-8454-7847fb4fc9ff"
+     Type: String
+  SSLCertificateId:
+    Description: SSL Certificate Id
+    Default: "arn:aws:acm:ap-southeast-2:421117346104:certificate/3699ca25-e7cd-4157-aef6-0a680a51652e"
+    Type: String
+  HostedZoneId:
+    Description: Hosted Zone Id
+    Default: "Z0487567QK3UCA9HOK0T"
+    Type: String
+  HostedZoneName: 
+    Description: Hosted Zone Name
+    Default: "dryvonne.net"
+    Type: String
+  RecordName: 
+    Description: Hosted Zone Name
+    Default: "demo.dryvonne.net"
+    Type: String
+  PythonVersion: 
+    Description: Python Version
+    Default: "3.8.6"
+    Type: String
+  TerraformVersion: 
+    Description: Terraform Version
+    Default: "0.13.5"
+    Type: String
+
+# if SnapshotId is not empty, create volume from snapshot
+Conditions: 
+  UseSnapshot: !Not [!Equals [!Ref SnapshotId, ""]]
+
+# Define Resources that will be launched via this template
+Resources:
+  JenkinsInstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: InstanceAttachVolume
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeVolumes
+                  - ec2:DescribeVolumeAttribute
+                  - ec2:DescribeAvailabilityZones
+                  - ec2:DescribeInstances
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ec2:AttachVolume
+                  - ec2:DetachVolume
+                Resource:
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:volume/*"
+              - Effect: Allow
+                Action:
+                  - kms:DescribeKey
+                  - kms:GenerateDataKey
+                  - kms:Encrypt
+                  - kms:ReEncrypt
+                  - kms:Decrypt
+                  - kms:ListGrants
+                  - kms:CreateGrant
+                  - kms:RevokeGrant
+                Resource: "*"
+
+  JenkinsInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref JenkinsInstanceRole
+  # Elastci load balancer
+  JenkinsLoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      Subnets: 
+        - !Ref SubnetId
+      CrossZone: true
+      SecurityGroups:
+        - !Ref LoadBalancerSecurityGroup
+      Listeners:
+        - InstancePort: !Ref JenkinsPort
+          InstanceProtocol: HTTP
+          LoadBalancerPort: '443'
+          Protocol: HTTPS
+          PolicyNames: 
+            - My-SSLNegotiation-Policy
+          SSLCertificateId: !Ref SSLCertificateId
+      HealthCheck:
+        Target: !Join [ "", [ 'HTTP:', !Ref JenkinsPort, '/login'] ]
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '3'
+        Interval: '10'
+        Timeout: '5'
+      Policies:
+        - PolicyName: My-SSLNegotiation-Policy
+          PolicyType: SSLNegotiationPolicyType
+          Attributes:
+            - Name: Reference-Security-Policy
+              Value: ELBSecurityPolicy-TLS-1-2-2017-01
+  
+ELBDNSRecordGroup:
+  Type: AWS::Route53::RecordSetGroup
+  Properties:
+    # HostedZoneName: dryvonne.net.
+    HostedZoneId: !Ref HostedZoneId
+    Comment: Zone apex alias targeted to ELB LoadBalancer.
+    RecordSets:
+      - Name: !Join [ "", [ !Ref RecordName,'.'] ]
+        Type: A
+        AliasTarget:
+          HostedZoneId: !GetAtt 'JenkinsLoadBalancer.CanonicalHostedZoneNameID'
+          DNSName: !Join [ "", [ 'dualstack.', !GetAtt 'JenkinsLoadBalancer.DNSName'] ] 
+          
+  # ELBDNSRecordSet:
+  #   Type: AWS::Route53::RecordSet
+  #   Properties:
+  #     HostedZoneName:  !Join [ "", [ !Ref HostedZoneName,'.'] ]
+  #     # HostedZoneId: !Ref HostedZoneId
+  #     Comment: Zone apex alias targeted to ELB LoadBalancer.
+  #     Name: !Join [ "", [ 'demo.', !Ref HostedZoneName,'.'] ]
+  #     Type: A
+  #     AliasTarget:
+  #       HostedZoneId: !GetAtt 'JenkinsLoadBalancer.CanonicalHostedZoneNameID'
+  #       DNSName: !Join [ "", [ 'dualstack.', !GetAtt 'JenkinsLoadBalancer.DNSName'] ] 
+
+  # Define Autoscaling Group for Jenkins 
+  JenkinsASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - !Ref SubnetId 
+      LaunchConfigurationName: !Ref JenkinsLaunchConfig
+      MinSize: '0'
+      MaxSize: '1'
+      DesiredCapacity: '1'
+      LoadBalancerNames: 
+        - !Ref JenkinsLoadBalancer
+      Tags:
+        - Key: Env
+          Value: Dev
+          PropagateAtLaunch: "true"
+        - Key: Name
+          Value: JenkinsServerGroup
+          PropagateAtLaunch: "false"
+          
+  JenkinsLaunchConfig: 
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties: 
+      ImageId: !Ref AMI
+      IamInstanceProfile: !Ref JenkinsInstanceProfile
+      SecurityGroups: 
+        - !Ref ServerSecurityGroup
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      EbsOptimized: "false"
+      UserData:
+        Fn::Base64: !Sub |   
+          #!/bin/bash -x
+          # Ensure that your software packages are up to date on your instance
+          yum update -y
+          yum install -y wget
+          # Set variables
+          # INSTANCE_ID=$(curl -s http://instance-data/latest/meta-data/instance-id)
+          INSTANCE_ID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
+          echo $INSTANCE_ID
+          VOL_STATUS=''
+          VOL_ID=${JenkinsDataVolume}
+          echo $VOL_ID
+          # install AWS CLI
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install
+          # Wait until the volume is available and attach it to the instance
+          until [[ "$VOL_STATUS" == \"available\" ]]; do VOL_STATUS=$(aws ec2 describe-volumes --volume-ids $VOL_ID --query 'Volumes[0].State'); echo $VOL_STATUS; sleep 5; done
+          aws ec2 attach-volume --volume-id $VOL_ID --instance-id $INSTANCE_ID --device /dev/sdb        
+          # Wait for additional EBS volume attached to JenkinsInstance
+          while true; do lsblk | grep xvdb && break; sleep 10; done
+          # Attach the additional EBS volume and mount the volume in /var/lib/Jenkins
+          mkdir -p /var/lib/jenkins  
+          if [ -z ${SnapshotId} ] ;then echo -e "o\nn\np\n1\n\n\nw" | fdisk /dev/sdb; sleep 3; mkfs.ext4 /dev/sdb1; e2label /dev/sdb1 JENKINS; fi
+          echo -e "LABEL=JENKINS     /var/lib/jenkins    ext4   defaults 0 0" >> /etc/fstab
+          mount -a
+          # install Jenkins
+          yum install -y java-1.8.0-openjdk-devel
+          # Enable the Jenkins repository. Download the repo file and import the GPG key
+          # rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+          wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+          yum clean all
+          rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
+          # make jenkins dirs:
+          mkdir -p /home/jenkins /var/lib/jenkins/.ssh /var/cache/jenkins/war /var/log/jenkins
+          # Install the latest stable version of Jenkins
+          yum install -y jenkins
+          # check whether Jenkins is running, type:
+          # systemctl status jenkins
+          # check jenkins login: 
+          useradd -d /var/lib/jenkins jenkins # login dir
+          usermod -s /bin/bash jenkins # shell use dir
+          # set_jenkins_port  
+          sed -i "s/JENKINS_PORT=\"8080\"/JENKINS_PORT=\"${JenkinsPort}\"/g" /etc/sysconfig/jenkins
+          # sshconfig: 
+          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /var/lib/jenkins/.ssh/config
+          # ssh-keyscan -H hostname.com >> /var/lib/jenkins/.ssh/known_hosts
+          # Generate SSH key: 
+          if [ -z ${SnapshotId} ] ;then ssh-keygen -t rsa -b 2048 -C jenkins@jenkins -N "" -f /var/lib/jenkins/.ssh/id_rsa; cat /var/lib/jenkins/.ssh/id_rsa.pub > /var/lib/jenkins/.ssh/authorized_keys; fi
+          # set permissions
+          chown -R jenkins:jenkins /home/jenkins /var/lib/jenkins /var/cache/jenkins /var/log/jenkins; sudo chmod 0700 /var/lib/jenkins/.ssh; sudo chmod 0600 /var/lib/jenkins/.ssh/*
+          # firewall: 
+          firewall-cmd --permanent --add-service=ssh; firewall-cmd --permanent --add-port='${JenkinsPort}'/tcp; sudo firewall-cmd --reload
+          # start the Jenkins service and enable it to start on system boot
+          systemctl start jenkins
+          systemctl enable jenkins
+          # install git
+          yum install -y git
+          # install python
+          yum -y groupinstall "Development Tools"
+          yum -y install bzip2-devel expat-devel gdbm-devel \
+            ncurses-devel openssl-devel readline-devel wget \
+            sqlite-devel tk-devel xz-devel zlib-devel libffi-devel
+          wget https://www.python.org/ftp/python/${PythonVersion}/Python-${PythonVersion}.tgz
+          tar -xf Python-${PythonVersion}.tgz && rm Python-${PythonVersion}.tgz
+          cd Python-${PythonVersion}
+          ./configure --enable-optimizations # Setup installation by running the configure script, performs a number of checks to make sure all of the dependencies on your system are present
+          make -j 4 # Start the Python 3.8 build process 
+          make altinstall #install the Python binaries
+          alias python="/usr/local/bin/python3.8"
+          cd ..
+          # intall boto3
+          pip3.8 install boto3
+          # install terraform 
+          wget https://releases.hashicorp.com/terraform/${TerraformVersion}/terraform_${TerraformVersion}_linux_amd64.zip
+          unzip terraform_${TerraformVersion}_linux_amd64.zip && rm terraform_${TerraformVersion}_linux_amd64.zip -f && mv terraform /usr/local/bin/
+
+  # Define the Security Group that will be appended to the Load Balancer.  
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group that will be used for the load balancer. 
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+  
+  # Define the Security Group that will be appended to the ENI of the Instance.  
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group that will be used for the Jenkins instance. Open ports 22, and the JenkinsPort
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: !Ref JenkinsPort
+          ToPort: !Ref JenkinsPort
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup       
+
+  # Create the EBS volume that we will use for /var/lib/jenkins
+  JenkinsDataVolume:
+    Type: AWS::EC2::Volume
+    Properties:
+      Size: !Ref VolumeSize
+      SnapshotId:  !If [UseSnapshot, !Ref SnapshotId, !Ref "AWS::NoValue"]
+      Encrypted: true
+      KmsKeyId: !Ref KmsKeyId
+      AvailabilityZone: !Ref AvailabilityZone
+      Tags:
+        - Key: Role
+          Value: Data
+    DeletionPolicy: Snapshot
+
+# Specify any outputs for the stack.
+Outputs:
+  TemplateID:
+    Description: 'Jenkins Server Template'
+    Value: 'Jenkins Server Template'
+  JenkinsURL:
+    Description: 'The URL of RecordSetGroup'
+    Value: !Sub 'https://${RecordName}/'
+# Validate the Template 
+# aws cloudformation validate-template --template-body file://cf-deploy-jenkins-asg.yaml

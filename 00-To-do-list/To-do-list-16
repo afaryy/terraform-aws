@@ -1,0 +1,11 @@
+Based on to-do-list-15, Create an AWS CloudFormation Jenkins Template 
+using router53+elb+asg to launch a jenkins server 
+with an attached data volume (mount on /var/lib/jenkins; encrpyted with KMS CMK). 
+When a failure occurs, start a new jenkins server to attach the same data volume dettached from the failed instance to keep data consistency.
+When the input Snapshotid is not empty,  create volume from snapshot
+
+- input paramters: InstanceType, VpcId, SubnetId, KeyName, SSHLocation, JenkinsPort,
+                   SnapshotId, VolumeSize, KmsKeyId, SSLCertificateId, HostedZoneId, HostedZoneName, RocordName, PythonVersion, TerraformVersion
+- output:          TemplateID, JenkinsURL
+
+
