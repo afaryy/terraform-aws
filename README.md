@@ -37,6 +37,11 @@ Code Directory | Decription | AWS services&Skills
 [TDL13-VPC-Flowlog-Cloudwatch](./TDL13-VPC-Flowlog-Cloudwatch) | Terraform template to create VPC Flowlog for VPC. | VPC Flowlog, IAM, Cloudwatch<br>---<br>AWS, Terraform, Make 
 [TDL14-Python-CWloginsight-VPCFlowlog-CWagent](./TDL14-Python-CWloginsight-VPCFlowlog-CWagent) | Based on TDL-06 and TDL-13, install and configure CW agent on EC2 based on config file in S3, Create VPC Flowlog for VPC. Use Python Script to automated query CW logs against VPC Flowlog group and apache-access-log group. | CW logs insight, IAM, EC2, VPC Flowlog, Cloudwatch Agent<br>---<br>AWS, Terraform, Bash, Python, Boto3, JSON, Make
 [TDL15-CloudFormation-Jenkins](./TDL15-CloudFormation-Jenkins) | Create a AWS CloudFormation Template to create a Jenkins server stack using a single EC2 instance with attaching another EBS volume mount on /var/lib/jenkins, for further using Jenkins to run Terraform, Shell and Python scripts on GitHub.<br>When the input SnapshotId is not empty, create volume from snapshot. Use UserData to mount volume, install Jenkins, Git, AWS CLI, Python, Boto3, Terraform etc. | CloudFormation, Jenkins Instance, EBS, Userdata, Vmvare Workstation<br>---<br>AWS, CloudFormation, Jenkins, YAML
+[TDL16-CloudFormation-Jenkins-ASG](./TDL16-CloudFormation-Jenkins-ASG) | Based on to-do-list-15, Create an AWS CloudFormation Jenkins Template using router53+elb+asg to launch a jenkins server with an attached data volume - mount on /var/lib/jenkins; encrpyted with KMS CMK. <br>When a failure occurs, start a new jenkins server to attache the same data volume dettached from the failed instance to keep data consistency.<br> When the input Snapshotid is not empty,  create volume recovery from snapshot | CloudFormation, Jenkins Instance, EBS, Userdata, DNS, Router53, ACM, ELB, ASG, KMS, <br>---<br>AWS, CloudFormation, Jenkins, YAML
+
+
+
+
 # Author
 
 ## Yingying(Yvonne) Yao
