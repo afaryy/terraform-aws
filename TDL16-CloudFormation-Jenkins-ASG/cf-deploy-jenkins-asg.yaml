@@ -41,6 +41,11 @@ Parameters:
     Type: "AWS::EC2::AvailabilityZone::Name"
     Default: 'ap-southeast-2a'
     AllowedPattern: "[a-z0-9-]*"
+  PublicSubnetId:
+    Description: VPC Subnet that ELB will be launched in.
+    Type: AWS::EC2::Subnet::Id
+    Default: "subnet-04709dce111382a62"
+    AllowedPattern: "[a-z0-9-]*"
   SubnetId:
     Description: VPC Subnet that this stack will be launched in.
     Type: AWS::EC2::Subnet::Id
@@ -167,7 +172,7 @@ Resources:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
     Properties:
       Subnets: 
-        - !Ref SubnetId
+        - !Ref PublicSubnetId
       CrossZone: true
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
@@ -191,19 +196,18 @@ Resources:
           Attributes:
             - Name: Reference-Security-Policy
               Value: ELBSecurityPolicy-TLS-1-2-2017-01
-  
-ELBDNSRecordGroup:
-  Type: AWS::Route53::RecordSetGroup
-  Properties:
-    # HostedZoneName: dryvonne.net.
-    HostedZoneId: !Ref HostedZoneId
-    Comment: Zone apex alias targeted to ELB LoadBalancer.
-    RecordSets:
-      - Name: !Join [ "", [ !Ref RecordName,'.'] ]
-        Type: A
-        AliasTarget:
-          HostedZoneId: !GetAtt 'JenkinsLoadBalancer.CanonicalHostedZoneNameID'
-          DNSName: !Join [ "", [ 'dualstack.', !GetAtt 'JenkinsLoadBalancer.DNSName'] ] 
+  ELBDNSRecordGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      # HostedZoneName: dryvonne.net.
+      HostedZoneId: !Ref HostedZoneId
+      Comment: Zone apex alias targeted to ELB LoadBalancer.
+      RecordSets:
+        - Name: !Join [ "", [ !Ref RecordName,'.'] ]
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt 'JenkinsLoadBalancer.CanonicalHostedZoneNameID'
+            DNSName: !Join [ "", [ 'dualstack.', !GetAtt 'JenkinsLoadBalancer.DNSName'] ] 
           
   # ELBDNSRecordSet:
   #   Type: AWS::Route53::RecordSet
@@ -270,8 +274,19 @@ ELBDNSRecordGroup:
           # Wait for additional EBS volume attached to JenkinsInstance
           while true; do lsblk | grep xvdb && break; sleep 10; done
           # Attach the additional EBS volume and mount the volume in /var/lib/Jenkins
-          mkdir -p /var/lib/jenkins  
-          if [ -z ${SnapshotId} ] ;then echo -e "o\nn\np\n1\n\n\nw" | fdisk /dev/sdb; sleep 3; mkfs.ext4 /dev/sdb1; e2label /dev/sdb1 JENKINS; fi
+          mkdir -p /var/lib/jenkins
+          #https://www.tecmint.com/find-linux-filesystem-type/
+          DISKLABEL=$(e2label /dev/sdb1)
+          if [[ $DISKLABEL == JENKINS ]]
+          then
+            echo "Disk has been labels, fiel system exists!"
+          else
+            echo -e "o\nn\np\n1\n\n\nw" | fdisk /dev/sdb
+            sleep 3
+            mkfs.ext4 /dev/sdb1
+            e2label /dev/sdb1 JENKINS
+          fi
+          #if [ -z ${SnapshotId} ] ;then echo -e "o\nn\np\n1\n\n\nw" | fdisk /dev/sdb; sleep 3; mkfs.ext4 /dev/sdb1; e2label /dev/sdb1 JENKINS; fi
           echo -e "LABEL=JENKINS     /var/lib/jenkins    ext4   defaults 0 0" >> /etc/fstab
           mount -a
           # install Jenkins
@@ -293,12 +308,15 @@ ELBDNSRecordGroup:
           # set_jenkins_port  
           sed -i "s/JENKINS_PORT=\"8080\"/JENKINS_PORT=\"${JenkinsPort}\"/g" /etc/sysconfig/jenkins
           # sshconfig: 
-          echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /var/lib/jenkins/.ssh/config
+          [[ -f /var/lib/jenkins/.ssh/config ]] || echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /var/lib/jenkins/.ssh/config
           # ssh-keyscan -H hostname.com >> /var/lib/jenkins/.ssh/known_hosts
           # Generate SSH key: 
           if [ -z ${SnapshotId} ] ;then ssh-keygen -t rsa -b 2048 -C jenkins@jenkins -N "" -f /var/lib/jenkins/.ssh/id_rsa; cat /var/lib/jenkins/.ssh/id_rsa.pub > /var/lib/jenkins/.ssh/authorized_keys; fi
           # set permissions
-          chown -R jenkins:jenkins /home/jenkins /var/lib/jenkins /var/cache/jenkins /var/log/jenkins; sudo chmod 0700 /var/lib/jenkins/.ssh; sudo chmod 0600 /var/lib/jenkins/.ssh/*
+          ln -s /var/lib/jenkins /home/jenkins
+          chown -R jenkins:jenkins /var/lib/jenkins /var/cache/jenkins /var/log/jenkins
+          sudo chmod 0700 /var/lib/jenkins/.ssh
+          sudo chmod 0600 /var/lib/jenkins/.ssh/*
           # firewall: 
           firewall-cmd --permanent --add-service=ssh; firewall-cmd --permanent --add-port='${JenkinsPort}'/tcp; sudo firewall-cmd --reload
           # start the Jenkins service and enable it to start on system boot
@@ -375,5 +393,3 @@ Outputs:
   JenkinsURL:
     Description: 'The URL of RecordSetGroup'
     Value: !Sub 'https://${RecordName}/'
-# Validate the Template 
-# aws cloudformation validate-template --template-body file://cf-deploy-jenkins-asg.yaml
