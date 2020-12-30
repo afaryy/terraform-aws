@@ -1,0 +1,74 @@
+[
+    {
+        "ParameterKey": "RecordName",
+        "ParameterValue": "demo.dryvonne.net"
+    },
+    {
+        "ParameterKey": "SSHLocation",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey": "KmsKeyId",
+        "ParameterValue": "8160b75f-7dcd-4398-8454-7847fb4fc9ff"
+    },
+    {
+        "ParameterKey": "HostedZoneName",
+        "ParameterValue": "dryvonne.net"
+    },
+    {
+        "ParameterKey": "HostedZoneId",
+        "ParameterValue": "Z0487567QK3UCA9HOK0T"
+    },
+    {
+        "ParameterKey": "PythonVersion",
+        "ParameterValue": "3.8.6"
+    },
+    {
+        "ParameterKey": "AvailabilityZone",
+        "ParameterValue": "ap-southeast-2a"
+    },
+    {
+        "ParameterKey": "SubnetId",
+        "ParameterValue": "subnet-04709dce111382a62"
+    },
+    {
+        "ParameterKey": "InstanceTagName",
+        "ParameterValue": "Jenkins"
+    },
+    {
+        "ParameterKey": "JenkinsPort",
+        "ParameterValue": "8080"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "da-key"
+    },
+    {
+        "ParameterKey": "SnapshotId",
+        "ParameterValue": "snap-097607aafd686cb41"
+    },
+    {
+        "ParameterKey": "VpcId",
+        "ParameterValue": "vpc-02ec2836691642ace"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.micro"
+    },
+    {
+        "ParameterKey": "SSLCertificateId",
+        "ParameterValue": "arn:aws:acm:ap-southeast-2:421117346104:certificate/3699ca25-e7cd-4157-aef6-0a680a51652e"
+    },
+    {
+        "ParameterKey": "TerraformVersion",
+        "ParameterValue": "0.13.5"
+    },
+    {
+        "ParameterKey": "AMI",
+        "ParameterValue": "ami-076e39b6b14e3bb20"
+    },
+    {
+        "ParameterKey": "VolumeSize",
+        "ParameterValue": "25"
+    }
+]
