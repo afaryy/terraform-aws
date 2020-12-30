@@ -41,11 +41,6 @@ Parameters:
     Type: "AWS::EC2::AvailabilityZone::Name"
     Default: 'ap-southeast-2a'
     AllowedPattern: "[a-z0-9-]*"
-  PublicSubnetId:
-    Description: VPC Subnet that ELB will be launched in.
-    Type: AWS::EC2::Subnet::Id
-    Default: "subnet-04709dce111382a62"
-    AllowedPattern: "[a-z0-9-]*"
   SubnetId:
     Description: VPC Subnet that this stack will be launched in.
     Type: AWS::EC2::Subnet::Id
