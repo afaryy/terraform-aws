@@ -167,7 +167,7 @@ Resources:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
     Properties:
       Subnets: 
-        - !Ref PublicSubnetId
+        - !Ref SubnetId
       CrossZone: true
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
